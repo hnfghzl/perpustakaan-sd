@@ -1,13 +1,10 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm px-4 py-3">
+<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm px-3 px-md-4 py-2 py-md-3">
     <div class="container-fluid d-flex justify-content-between align-items-center">
 
         {{-- Bagian kiri --}}
         <div class="d-flex align-items-center">
-            {{-- Tombol toggle sidebar (hanya tampil di HP) --}}
-            <button class="btn d-md-none me-3 rounded-pill" id="menu-toggle" style="background: linear-gradient(135deg, #1ABC9C 0%, #16A085 100%); color: white; border: none; font-weight: 500; transition: all 0.3s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(22, 160, 133, 0.4)';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='none';">
-                <i data-feather="menu"></i>
-            </button>
-            <h4 class="fw-bold mb-0">Dashboard</h4>
+            <h4 class="fw-bold mb-0 d-none d-md-block">Dashboard</h4>
+            <h5 class="fw-bold mb-0 d-md-none">Dashboard</h5>
         </div>
 
         {{-- Bagian kanan --}}
@@ -19,9 +16,10 @@
                         id="userDropdown" 
                         data-toggle="dropdown" 
                         aria-haspopup="true" 
-                        aria-expanded="false">
+                        aria-expanded="false"
+                        aria-label="User Menu">
                     {{-- Avatar Circle --}}
-                    <div class="user-avatar">
+                    <div class="user-avatar" style="width: 40px; height: 40px;">
                         @if(Auth::user()->foto_profil)
                             <img src="{{ asset('storage/' . Auth::user()->foto_profil) }}" 
                                  alt="{{ Auth::user()->nama_user }}" 
@@ -30,12 +28,13 @@
                         @else
                             <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->nama_user) }}&background=6366f1&color=fff&bold=true&size=128" 
                                  alt="{{ Auth::user()->nama_user }}" 
-                                 class="rounded-circle">
+                                 class="rounded-circle"
+                                 style="width: 100%; height: 100%; object-fit: cover;">
                         @endif
                     </div>
                 </button>
                 
-                <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown" style="min-width: 220px;">
+                <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown" style="min-width: 220px; max-width: 280px;">
                     {{-- User Info Header --}}
                     <div class="px-3 py-3 border-bottom bg-light">
                         <div class="d-flex align-items-center">

@@ -1,7 +1,10 @@
+/* Base Styles */
 body {
     font-family: 'Arial', sans-serif;
+    overflow-x: hidden;
 }
 
+/* Sidebar Styles */
 .sidebar {
     position: fixed;
     top: 0;
@@ -11,30 +14,214 @@ body {
     padding: 0;
     height: 100%;
     background-color: #343a40;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 .sidebar .nav-link {
     color: #ffffff;
     padding: 15px;
+    transition: background-color 0.2s;
+}
+
+.sidebar .nav-link:hover {
+    background-color: #495057;
 }
 
 .sidebar .nav-link.active {
     background-color: #007bff;
 }
 
+/* Main Content */
 .main-content {
     margin-left: 200px;
     padding: 20px;
+    min-height: 100vh;
 }
 
+/* Table Responsive */
 .table-responsive {
     margin-top: 20px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
 }
 
+.table {
+    margin-bottom: 1rem;
+}
+
+.table thead th {
+    white-space: nowrap;
+}
+
+/* Card Styles */
 .card {
     margin-bottom: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
 }
 
 .card-header {
     font-weight: bold;
+    background-color: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+}
+
+.card-body {
+    padding: 1.25rem;
+}
+
+/* Button Styles */
+.btn {
+    white-space: nowrap;
+}
+
+.btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+}
+
+/* Form Controls */
+.form-control, .form-select {
+    width: 100%;
+    max-width: 100%;
+}
+
+/* Stat Cards */
+.stat-card {
+    padding: 1.5rem;
+    border-radius: 10px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+/* Mobile Responsive Styles */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+        padding: 10px;
+    }
+
+    .card-body {
+        padding: 0.75rem;
+    }
+
+    .table {
+        font-size: 0.875rem;
+    }
+
+    .btn-sm {
+        font-size: 0.75rem;
+        padding: 0.25rem 0.5rem;
+    }
+
+    /* Stack stat cards */
+    .row > [class*='col-'] {
+        margin-bottom: 1rem;
+    }
+
+    /* Better form spacing */
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+    /* Modal adjustments */
+    .modal-dialog {
+        margin: 0.5rem;
+        max-width: calc(100% - 1rem);
+    }
+
+    .modal-content {
+        border-radius: 8px;
+    }
+
+    /* Pagination */
+    .pagination {
+        flex-wrap: wrap;
+        justify-content: center;
+    }
+
+    .pagination .page-item {
+        margin: 2px;
+    }
+}
+
+@media (max-width: 576px) {
+    .main-content {
+        padding: 8px;
+    }
+
+    .card {
+        margin-bottom: 0.75rem;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    h2 {
+        font-size: 1.3rem;
+    }
+
+    h3 {
+        font-size: 1.1rem;
+    }
+
+    .table {
+        font-size: 0.8rem;
+        min-width: 600px;
+    }
+
+    /* Hide some columns on very small screens */
+    .d-none-xs {
+        display: none;
+    }
+}
+
+/* Print Styles */
+@media print {
+    .sidebar,
+    .menu-toggle,
+    .btn,
+    .navbar {
+        display: none !important;
+    }
+
+    .main-content {
+        margin-left: 0 !important;
+    }
+
+    .card {
+        break-inside: avoid;
+    }
+}
+
+/* Utility Classes */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.no-wrap {
+    white-space: nowrap;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
