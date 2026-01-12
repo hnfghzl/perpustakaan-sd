@@ -356,18 +356,45 @@
     @endif
 </div>
 
-<script data-navigate-once>document.addEventListener('livewire:initialized', () => {
-    // Refresh Feather Icons
-    if (typeof feather !== 'undefined') {
-        setTimeout(() => {
-            feather.replace();
-        }, 100);
-    }
-
-    // Livewire hooks
-    Livewire.hook('morph.updated', () => {
-        if (typeof feather !== 'undefined') {
-            feather.replace();
-        }
+{{-- ====================== SCRIPT KONFIRMASI HAPUS ====================== --}}
+<script>
+    // Event listener untuk konfirmasi delete
+    document.addEventListener('livewire:initialized', () => {
+        // Listen to confirm-delete event
+        Livewire.on('confirm-delete', (data) => {
+            if (confirm('⚠️ Yakin ingin menghapus user ini?\n\nData yang dihapus tidak dapat dikembalikan!')) {
+                Livewire.dispatch('deleteUser', { id: data[0].id });
+            }
+        });
     });
-});</script>
+</script>
+
+{{-- Feather Icons Refresh Pattern --}}
+@assets
+<script>
+    window.refreshFeatherIcons = function() {
+        if (typeof feather !== 'undefined') {
+            setTimeout(() => {
+                feather.replace();
+            }, 150);
+        }
+    }
+</script>
+@endassets
+
+<script data-navigate-once>
+    document.addEventListener('livewire:initialized', () => {
+        refreshFeatherIcons();
+        
+        // Livewire hooks for icon refresh
+        Livewire.hook('element.init', () => refreshFeatherIcons());
+        Livewire.hook('element.updated', () => refreshFeatherIcons());
+        Livewire.hook('morph.updated', () => refreshFeatherIcons());
+        Livewire.hook('commit', () => refreshFeatherIcons());
+        
+        // MutationObserver as backup
+        const observer = new MutationObserver(() => refreshFeatherIcons());
+        observer.observe(document.body, { childList: true, subtree: true });
+    });
+</script>
+
