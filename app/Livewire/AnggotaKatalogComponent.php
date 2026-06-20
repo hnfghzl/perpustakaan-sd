@@ -25,6 +25,14 @@ class AnggotaKatalogComponent extends Component
     public $alertPesan = '';
     public $alertTipe = '';
     protected $paginationTheme = 'bootstrap';
+    
+    protected $queryString = ['activeTab' => ['except' => 'katalog']];
+
+    public function mount()
+    {
+        // Set activeTab dari query parameter 'tab'
+        $this->activeTab = request()->get('tab', 'katalog');
+    }
 
     public function updatingSearch()
     {
@@ -77,7 +85,7 @@ class AnggotaKatalogComponent extends Component
             $number = $last ? intval(substr($last->kode_transaksi, -4)) + 1 : 1;
             $kodeTransaksi = 'PJM-' . $date . '-' . str_pad($number, 4, '0', STR_PAD_LEFT);
 
-            // Create peminjaman
+            // Create peminjaman dengan status menunggu verifikasi
             $peminjaman = Peminjaman::create([
                 'kode_transaksi' => $kodeTransaksi,
                 'id_anggota' => $anggota->id_anggota,
@@ -85,7 +93,7 @@ class AnggotaKatalogComponent extends Component
                 'jumlah_peminjaman' => count($this->selectedEksemplar),
                 'tgl_pinjam' => now(),
                 'tgl_jatuh_tempo' => now()->addDays(7),
-                'status_buku' => 'dipinjam'
+                'status_buku' => 'menunggu'  // Status menunggu verifikasi
             ]);
 
             // Create detail peminjaman
@@ -95,16 +103,16 @@ class AnggotaKatalogComponent extends Component
                     'id_eksemplar' => $id_eksemplar
                 ]);
 
-                // Update eksemplar status
-                Eksemplar::where('id_eksemplar', $id_eksemplar)
-                    ->update(['status_eksemplar' => 'dipinjam']);
+                // TIDAK update status eksemplar dulu, tunggu disetujui pustakawan
+                // Eksemplar::where('id_eksemplar', $id_eksemplar)
+                //     ->update(['status_eksemplar' => 'dipinjam']);
             }
 
             $this->lastPeminjaman = $peminjaman;
             $this->showKonfirmasiModal = false;
             $this->showBuktiModal = true;
             $this->selectedEksemplar = [];
-            $this->alertPesan = 'Peminjaman berhasil! Tunjukkan bukti ke pustakawan.';
+            $this->alertPesan = 'Pengajuan berhasil dikirim! Tunggu verifikasi dari pustakawan.';
             $this->alertTipe = 'success';
         } catch (\Exception $e) {
             $this->alertPesan = 'Gagal membuat peminjaman: ' . $e->getMessage();
@@ -145,6 +153,11 @@ class AnggotaKatalogComponent extends Component
             ->where('status_buku', 'dipinjam')
             ->where('tgl_jatuh_tempo', '<', now())
             ->count() : 0;
+        
+        // Pengajuan yang menunggu verifikasi
+        $pengajuanMenunggu = $anggota ? Peminjaman::where('id_anggota', $anggota->id_anggota)
+            ->where('status_buku', 'menunggu')
+            ->count() : 0;
 
         // Riwayat Peminjaman untuk pagination di tab history
         $riwayatPeminjaman = $anggota ? Peminjaman::where('id_anggota', $anggota->id_anggota)
@@ -166,12 +179,15 @@ class AnggotaKatalogComponent extends Component
         $data['totalBuku'] = $totalBuku;
         $data['peminjamanAktif'] = $peminjamanAktif;
         $data['bukuTerlambat'] = $bukuTerlambat;
+        $data['pengajuanMenunggu'] = $pengajuanMenunggu;
         $data['riwayatPeminjaman'] = $riwayatPeminjaman;
         $data['activeTab'] = $this->activeTab;
         $data['alertPesan'] = $this->alertPesan;
         $data['alertTipe'] = $this->alertTipe;
         $data['title'] = 'Katalog Buku';
 
-        return view('livewire.anggota-katalog', $data)->layoutData($data);
+        return view('livewire.anggota-katalog', $data)
+            ->layout('components.layouts.anggota')
+            ->layoutData($data);
     }
 }
