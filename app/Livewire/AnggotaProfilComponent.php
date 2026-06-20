@@ -24,8 +24,6 @@ class AnggotaProfilComponent extends Component
         $data['alertTipe'] = $this->alertTipe;
         $data['title'] = 'Profil Saya';
         
-        return view('livewire.anggota-profil', $data)
-            ->layout('components.layouts.anggota')
-            ->layoutData($data);
+        return view('livewire.anggota-profil', $data)->layoutData($data);
     }
 }

@@ -25,14 +25,6 @@ class AnggotaKatalogComponent extends Component
     public $alertPesan = '';
     public $alertTipe = '';
     protected $paginationTheme = 'bootstrap';
-    
-    protected $queryString = ['activeTab' => ['except' => 'katalog']];
-    
-    public function mount()
-    {
-        // Set activeTab from query parameter
-        $this->activeTab = request()->get('tab', 'katalog');
-    }
 
     public function updatingSearch()
     {
@@ -153,9 +145,6 @@ class AnggotaKatalogComponent extends Component
             ->where('status_buku', 'dipinjam')
             ->where('tgl_jatuh_tempo', '<', now())
             ->count() : 0;
-        
-        // Pengajuan yang menunggu verifikasi (jika ada sistem pengajuan)
-        $pengajuanMenunggu = 0;
 
         // Riwayat Peminjaman untuk pagination di tab history
         $riwayatPeminjaman = $anggota ? Peminjaman::where('id_anggota', $anggota->id_anggota)
@@ -177,15 +166,12 @@ class AnggotaKatalogComponent extends Component
         $data['totalBuku'] = $totalBuku;
         $data['peminjamanAktif'] = $peminjamanAktif;
         $data['bukuTerlambat'] = $bukuTerlambat;
-        $data['pengajuanMenunggu'] = $pengajuanMenunggu;
         $data['riwayatPeminjaman'] = $riwayatPeminjaman;
         $data['activeTab'] = $this->activeTab;
         $data['alertPesan'] = $this->alertPesan;
         $data['alertTipe'] = $this->alertTipe;
         $data['title'] = 'Katalog Buku';
 
-        return view('livewire.anggota-katalog', $data)
-            ->layout('components.layouts.anggota')
-            ->layoutData($data);
+        return view('livewire.anggota-katalog', $data)->layoutData($data);
     }
 }
