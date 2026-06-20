@@ -74,6 +74,18 @@ class KategoriSeeder extends Seeder
                 'deskripsi' => 'Komik edukatif dan hiburan',
                 'created_at' => Carbon::now(),
                 'updated_at' => Carbon::now()
+            ],
+            [
+                'nama' => 'Buku Pelajaran',
+                'deskripsi' => 'Buku teks utama, tematik, dan panduan belajar siswa',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
+            ],
+            [
+                'nama' => 'Pengayaan & Keterampilan',
+                'deskripsi' => 'Buku untuk menambah wawasan dan keterampilan praktis',
+                'created_at' => Carbon::now(),
+                'updated_at' => Carbon::now()
             ]
         ];
 

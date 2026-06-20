@@ -1,3 +1,4 @@
+<div>
 {{-- Laporan Manajerial Modern --}}
 <style>
     /* Remove all dark borders/shadows */
@@ -412,12 +413,10 @@
     </div>
 </div>
 
+@script
 <script>
-document.addEventListener('DOMContentLoaded', function() {
-    setTimeout(initLaporanCharts, 300);
-});
-
-function initLaporanCharts() {
+// Initialize charts immediately - IIFE pattern
+(function() {
     console.log('Initializing laporan charts...');
     
     if (typeof Chart === 'undefined') {
@@ -425,103 +424,122 @@ function initLaporanCharts() {
         return;
     }
 
-    // Chart 1: Tren Peminjaman
-    const trenCtx = document.getElementById('trenPeminjamanChart');
-    if (trenCtx) {
-        const trenData = @json($laporanPeminjaman['trenPeminjaman'] ?? []);
-        const labels = trenData.map(item => item.bulan);
-        const values = trenData.map(item => item.total);
-        
-        new Chart(trenCtx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Jumlah Peminjaman',
-                    data: values,
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: 5,
-                    pointHoverRadius: 7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+    try {
+        // Chart 1: Tren Peminjaman
+        const trenCtx = document.getElementById('trenPeminjamanChart');
+        if (trenCtx) {
+            const trenData = @json($laporanPeminjaman['trenPeminjaman'] ?? []);
+            const labels = trenData.map(item => item.bulan);
+            const values = trenData.map(item => item.total);
+            
+            new Chart(trenCtx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Jumlah Peminjaman',
+                        data: values,
+                        borderColor: 'rgb(59, 130, 246)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: 5,
+                        pointHoverRadius: 7
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // Chart 2: Distribusi Anggota
-    const anggotaCtx = document.getElementById('distribusiAnggotaChart');
-    if (anggotaCtx) {
-        new Chart(anggotaCtx, {
-            type: 'pie',
-            data: {
-                labels: ['Guru', 'Siswa'],
-                datasets: [{
-                    data: [
-                        {{ $statistikAnggota['totalGuru'] ?? 0 }},
-                        {{ $statistikAnggota['totalSiswa'] ?? 0 }}
-                    ],
-                    backgroundColor: [
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(16, 185, 129, 0.8)'
-                    ],
-                    borderWidth: 2
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false
-            }
-        });
-    }
-
-    // Chart 3: Status Eksemplar
-    const statusCtx = document.getElementById('statusEksemplarChart');
-    if (statusCtx) {
-        const statusData = @json($inventarisKoleksi['distribusiStatus'] ?? []);
-        
-        new Chart(statusCtx, {
-            type: 'bar',
-            data: {
-                labels: statusData.map(item => item.status),
-                datasets: [{
-                    label: 'Jumlah',
-                    data: statusData.map(item => item.jumlah),
-                    backgroundColor: [
-                        'rgba(16, 185, 129, 0.8)',
-                        'rgba(245, 158, 11, 0.8)',
-                        'rgba(239, 68, 68, 0.8)',
-                        'rgba(107, 114, 128, 0.8)'
-                    ]
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
+        // Chart 2: Distribusi Anggota
+        const anggotaCtx = document.getElementById('distribusiAnggotaChart');
+        if (anggotaCtx) {
+            new Chart(anggotaCtx, {
+                type: 'pie',
+                data: {
+                    labels: ['Guru', 'Siswa'],
+                    datasets: [{
+                        data: [
+                            {{ $statistikAnggota['totalGuru'] ?? 0 }},
+                            {{ $statistikAnggota['totalSiswa'] ?? 0 }}
+                        ],
+                        backgroundColor: [
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(16, 185, 129, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
                 },
-                scales: {
-                    y: { beginAtZero: true }
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false
                 }
-            }
-        });
-    }
+            });
+        }
 
-    // Refresh Feather Icons
+        // Chart 3: Status Eksemplar
+        const statusCtx = document.getElementById('statusEksemplarChart');
+        if (statusCtx) {
+            const statusData = @json($inventarisKoleksi['distribusiStatus'] ?? []);
+            
+            new Chart(statusCtx, {
+                type: 'bar',
+                data: {
+                    labels: statusData.map(item => item.status),
+                    datasets: [{
+                        label: 'Jumlah',
+                        data: statusData.map(item => item.jumlah),
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(245, 158, 11, 0.8)',
+                            'rgba(239, 68, 68, 0.8)',
+                            'rgba(107, 114, 128, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        y: { beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        // Refresh Feather Icons
+        if (typeof feather !== 'undefined') {
+            feather.replace();
+        }
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
+})();
+
+// Refresh icons on Livewire updates
+Livewire.hook('morph.updated', () => {
     if (typeof feather !== 'undefined') {
         feather.replace();
     }
-}
+});
+
+Livewire.hook('commit', () => {
+    if (typeof feather !== 'undefined') {
+        feather.replace();
+    }
+});
 </script>
+@endscript
+</div>

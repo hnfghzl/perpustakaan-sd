@@ -1,157 +1,96 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom sticky-top shadow-sm px-3 px-md-4 py-2 py-md-3">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
+{{-- Top Navigation Bar --}}
+<nav class="navbar navbar-expand navbar-light bg-white shadow-sm px-4 py-2" style="border-bottom: 1px solid #e3e6f0; position: sticky; top: 0; z-index: 900;">
 
-        {{-- Bagian kiri --}}
-        <div class="d-flex align-items-center">
-            <h4 class="fw-bold mb-0 d-none d-md-block">Dashboard</h4>
-            <h5 class="fw-bold mb-0 d-md-none">Dashboard</h5>
-        </div>
-
-        {{-- Bagian kanan --}}
-        <div class="d-flex align-items-center">
-            {{-- User Profile Dropdown --}}
-            <div class="dropdown">
-                <button class="btn border-0 p-0 dropdown-toggle dropdown-toggle-no-caret d-flex align-items-center" 
-                        type="button" 
-                        id="userDropdown" 
-                        data-toggle="dropdown" 
-                        aria-haspopup="true" 
-                        aria-expanded="false"
-                        aria-label="User Menu">
-                    {{-- Avatar Circle --}}
-                    <div class="user-avatar" style="width: 40px; height: 40px;">
-                        @if(Auth::user()->foto_profil)
-                            <img src="{{ asset('storage/' . Auth::user()->foto_profil) }}" 
-                                 alt="{{ Auth::user()->nama_user }}" 
-                                 class="rounded-circle"
-                                 style="width: 100%; height: 100%; object-fit: cover;">
-                        @else
-                            <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->nama_user) }}&background=6366f1&color=fff&bold=true&size=128" 
-                                 alt="{{ Auth::user()->nama_user }}" 
-                                 class="rounded-circle"
-                                 style="width: 100%; height: 100%; object-fit: cover;">
-                        @endif
-                    </div>
-                </button>
-                
-                <div class="dropdown-menu dropdown-menu-right shadow" aria-labelledby="userDropdown" style="min-width: 220px; max-width: 280px;">
-                    {{-- User Info Header --}}
-                    <div class="px-3 py-3 border-bottom bg-light">
-                        <div class="d-flex align-items-center">
-                            @if(Auth::user()->foto_profil)
-                                <img src="{{ asset('storage/' . Auth::user()->foto_profil) }}" 
-                                     alt="{{ Auth::user()->nama_user }}" 
-                                     class="rounded-circle me-2" 
-                                     style="width: 40px; height: 40px; object-fit: cover;">
-                            @else
-                                <img src="https://ui-avatars.com/api/?name={{ urlencode(Auth::user()->nama_user) }}&background=6366f1&color=fff&bold=true&size=128" 
-                                     alt="{{ Auth::user()->nama_user }}" 
-                                     class="rounded-circle me-2" 
-                                     style="width: 40px; height: 40px;">
-                            @endif
-                            <div>
-                                <strong class="d-block text-truncate" style="max-width: 140px;">{{ Auth::user()->nama_user }}</strong>
-                                <small class="text-muted d-block text-truncate" style="max-width: 140px;">{{ Auth::user()->email }}</small>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    {{-- Dropdown Items --}}
-                    <a class="dropdown-item py-2" href="{{ route('profil') }}">
-                        <i data-feather="user" style="width: 16px; height: 16px;"></i>
-                        <span class="ms-2">Edit Profil</span>
-                    </a>
-                    
-                    <div class="dropdown-divider my-0"></div>
-                    
-                    <a class="dropdown-item py-2 text-danger" href="{{ route('logout') }}">
-                        <i data-feather="log-out" style="width: 16px; height: 16px;"></i>
-                        <span class="ms-2">Logout</span>
-                    </a>
-                </div>
-            </div>
-        </div>
+    {{-- Kiri: Nama Halaman --}}
+    <div class="navbar-brand mr-auto">
+        <span class="font-weight-bold text-dark" style="font-size: 0.95rem;">
+            @yield('page-title', 'Dashboard')
+        </span>
     </div>
+
+    {{-- Kanan: Info User & Dropdown --}}
+    <ul class="navbar-nav ml-auto align-items-center">
+
+        {{-- Notifikasi keterlambatan & pengajuan menunggu --}}
+        @php
+            $terlambat = \App\Models\Peminjaman::where('status_buku', 'dipinjam')
+                ->where('tgl_jatuh_tempo', '<', \Carbon\Carbon::now())
+                ->count();
+
+            $menunggu = in_array(auth()->user()->role ?? '', ['pustakawan', 'kepala'])
+                ? \App\Models\Peminjaman::where('status_buku', 'menunggu')->count()
+                : 0;
+        @endphp
+
+        {{-- Badge: pengajuan menunggu verifikasi --}}
+        @if($menunggu > 0)
+        <li class="nav-item mr-2">
+            <a href="{{ route('verifikasi-pengajuan') }}"
+               class="btn btn-sm position-relative"
+               title="{{ $menunggu }} pengajuan menunggu verifikasi"
+               style="background:#eff6ff;color:#2563eb;border:1px solid #bfdbfe;">
+                <i class="fas fa-clipboard-list"></i>
+                <span class="badge badge-danger"
+                      style="position:absolute;top:-6px;right:-6px;font-size:0.6rem;padding:3px 5px;border-radius:50%;">
+                    {{ $menunggu }}
+                </span>
+            </a>
+        </li>
+        @endif
+
+        {{-- Badge: buku terlambat --}}
+        @if($terlambat > 0)
+        <li class="nav-item mr-3">
+            <a href="{{ route('peminjaman') }}" class="btn btn-sm btn-warning position-relative" title="{{ $terlambat }} buku terlambat">
+                <i class="fas fa-bell"></i>
+                <span class="badge badge-danger" style="position: absolute; top: -6px; right: -6px; font-size: 0.6rem; padding: 3px 5px; border-radius: 50%;">{{ $terlambat }}</span>
+            </a>
+        </li>
+        @endif
+
+        {{-- User Dropdown --}}
+        <li class="nav-item dropdown">
+            <a class="nav-link dropdown-toggle-no-arrow d-flex align-items-center" href="#" id="userDropdown" role="button"
+               data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" style="gap: 8px;">
+                {{-- Avatar bulat dengan inisial --}}
+                <div style="width: 36px; height: 36px; border-radius: 50%; background: linear-gradient(135deg, #4e73df, #2563eb); display: flex; align-items: center; justify-content: center; color: white; font-weight: 700; font-size: 0.85rem; flex-shrink: 0;">
+                    {{ strtoupper(substr(auth()->user()->nama_user ?? auth()->user()->name ?? 'U', 0, 1)) }}
+                </div>
+                <div class="d-none d-sm-block" style="line-height: 1.2;">
+                    <div class="font-weight-bold text-dark" style="font-size: 0.85rem; max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">
+                        {{ auth()->user()->nama_user ?? auth()->user()->name ?? 'User' }}
+                    </div>
+                    <div class="text-muted" style="font-size: 0.72rem; text-transform: capitalize;">
+                        {{ auth()->user()->role ?? '' }}
+                    </div>
+                </div>
+                <i class="fas fa-chevron-down ml-1 text-muted" style="font-size: 0.65rem;"></i>
+            </a>
+
+            <div class="dropdown-menu dropdown-menu-right shadow border-0 mt-1" aria-labelledby="userDropdown"
+                 style="min-width: 200px; border-radius: 10px; overflow: hidden;">
+                <div class="px-4 py-2 border-bottom bg-light">
+                    <div class="font-weight-bold text-dark" style="font-size: 0.85rem;">{{ auth()->user()->nama_user ?? auth()->user()->name ?? 'User' }}</div>
+                    <div class="text-muted" style="font-size: 0.75rem; text-transform: capitalize;">{{ auth()->user()->role ?? '' }}</div>
+                </div>
+                <a class="dropdown-item d-flex align-items-center py-2" href="{{ route('profil') }}">
+                    <i class="fas fa-user-circle mr-2 text-primary"></i>
+                    <span>Profil Saya</span>
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item d-flex align-items-center py-2 text-danger" href="{{ route('logout') }}"
+                   onclick="event.preventDefault(); if(confirm('Yakin ingin keluar?')) window.location.href=this.href;">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    <span>Keluar</span>
+                </a>
+            </div>
+        </li>
+    </ul>
 </nav>
 
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const toggleBtn = document.getElementById('menu-toggle');
-        const sidebar = document.querySelector('.sidebar');
-        toggleBtn.addEventListener('click', () => sidebar.classList.toggle('open'));
-        
-        // Initial feather icons replace
-        feather.replace();
-        
-        // Re-replace feather icons when dropdown opens (for dynamic content)
-        $('#userDropdown').on('shown.bs.dropdown', function () {
-            feather.replace();
-        });
-    });
-</script>
-
 <style>
-    /* User Avatar Styling */
-    .user-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        overflow: hidden;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        border: 2px solid #e0e0e0;
-    }
-    
-    .user-avatar:hover {
-        border-color: #1ABC9C;
-        box-shadow: 0 0 0 3px rgba(26, 188, 156, 0.2);
-    }
-    
-    .user-avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-    }
-
-    /* Remove default dropdown arrow */
-    .dropdown-toggle-no-caret::after {
+    /* Hilangkan panah otomatis Bootstrap pada dropdown-toggle */
+    .dropdown-toggle-no-arrow::after {
         display: none !important;
-    }
-
-    /* Dropdown styling */
-    .dropdown-menu {
-        border-radius: 0.75rem;
-        border: 1px solid #e0e0e0;
-        padding: 0;
-        margin-top: 0.75rem !important;
-        animation: slideDown 0.2s ease;
-    }
-
-    @keyframes slideDown {
-        from {
-            opacity: 0;
-            transform: translateY(-10px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
-    }
-    
-    .dropdown-item {
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        padding: 0.6rem 1rem;
-    }
-    
-    .dropdown-item:hover {
-        background: linear-gradient(135deg, rgba(26, 188, 156, 0.1) 0%, rgba(22, 160, 133, 0.1) 100%);
-        padding-left: 1.25rem;
-    }
-    
-    .dropdown-item.text-danger:hover {
-        background-color: #fff5f5;
-        color: #dc3545 !important;
     }
 </style>

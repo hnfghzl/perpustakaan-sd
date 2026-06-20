@@ -176,7 +176,8 @@
                             <div style="font-weight: 600; color: {{ $terlambat ? '#dc2626' : '#3b82f6' }}; font-size: 14px; margin-bottom: 4px;">{{ $data->kode_transaksi }}</div>
                             <div style="color: #374151; font-size: 14px; font-weight: 600; margin-bottom: 4px;">{{ $data->anggota->nama_anggota }}</div>
                             <div style="font-size: 12px; color: #6b7280;">
-                                <i data-feather="user" style="width: 12px; height: 12px;"></i> {{ $data->user->nama_user }}
+                                <i data-feather="user" style="width: 12px; height: 12px;"></i>
+                                {{ $data->user?->nama_user ?? '🎓 Portal Anggota' }}
                             </div>
                         </div>
                     </div>
@@ -291,7 +292,9 @@
                         </div>
                         <div class="col-md-4" style="margin-bottom: 12px;">
                             <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Petugas Peminjaman</div>
-                            <div style="font-size: 13px; color: #374151;">{{ $selectedPeminjaman->user->nama_user }}</div>
+                            <div style="font-size: 13px; color: #374151;">
+                                {{ $selectedPeminjaman->user?->nama_user ?? '🎓 Portal Anggota (Mandiri)' }}
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -157,11 +157,11 @@
                                     <i data-feather="search" style="width: 18px; height: 18px; color: #6b7280;"></i>
                                 </span>
                             </div>
-                            <input type="text" wire:model.live="search" class="form-control" placeholder="Cari kode atau lokasi..." style="border: 2px solid #e5e7eb; border-left: none; border-radius: 0 12px 12px 0; padding: 12px 16px;">
+                            <input type="text" wire:model.live="search" class="form-control" placeholder="Cari kode atau lokasi..." style="border: 2px solid #e5e7eb; border-left: none; border-radius: 0 12px 12px 0; padding: 10px 12px;">
                         </div>
                     </div>
                     <div class="col-md-3">
-                        <select wire:model.live="filterStatus" class="form-control" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 12px 16px;">
+                        <select wire:model.live="filterStatus" class="form-control" style="border: 2px solid #e5e7eb; border-radius: 12px; padding: 10px 12px; width: 100%; min-width: 0;">
                             <option value="">Semua Status</option>
                             <option value="tersedia">Tersedia</option>
                             <option value="dipinjam">Dipinjam</option>
@@ -171,7 +171,7 @@
                     </div>
                     <div class="col-md-4 text-right">
                         @if($isPustakawan)
-                        <button wire:click="$toggle('showFormEksemplar')" class="buku-btn-primary">
+                        <button wire:click="openFormEksemplar" class="buku-btn-primary">
                             <i data-feather="plus" style="width: 18px; height: 18px;"></i> Tambah Eksemplar
                         </button>
                         @endif
@@ -193,6 +193,12 @@
 
                     <form wire:submit.prevent="{{ $id_eksemplar ? 'updateEksemplar' : 'storeEksemplar' }}">
                         <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 13px;">Kode Eksemplar <span class="text-danger">*</span></label>
+                                <input type="text" wire:model="kode_eksemplar" class="buku-form-control" placeholder="Otomatis" readonly style="background-color: #f9fafb;">
+                                @error('kode_eksemplar') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
+                                <small style="color: #6b7280; font-size: 12px;">Auto-generated saat form dibuka</small>
+                            </div>
                             <div class="col-md-6 mb-3">
                                 <label style="font-weight: 600; color: #374151; margin-bottom: 8px; font-size: 13px;">Lokasi Rak</label>
                                 <input type="text" wire:model="lokasi_rak" class="buku-form-control" placeholder="Contoh: A-01">
@@ -253,13 +259,13 @@
                             </div>
                             <div class="col-md-5">
                                 @if($eks->status_eksemplar == 'tersedia')
-                                <span style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Tersedia</span>
+                                <span style="display: inline-block; white-space: nowrap; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Tersedia</span>
                                 @elseif($eks->status_eksemplar == 'dipinjam')
-                                <span style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Dipinjam</span>
+                                <span style="display: inline-block; white-space: nowrap; background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Dipinjam</span>
                                 @elseif($eks->status_eksemplar == 'rusak')
-                                <span style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Rusak</span>
+                                <span style="display: inline-block; white-space: nowrap; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Rusak</span>
                                 @else
-                                <span style="background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Hilang</span>
+                                <span style="display: inline-block; white-space: nowrap; background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%); color: white; padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 600;">Hilang</span>
                                 @endif
                                 @if($eks->harga)
                                 <span style="margin-left: 12px; color: #6b7280; font-size: 13px;">Rp {{ number_format($eks->harga, 0, ',', '.') }}</span>
@@ -332,7 +338,7 @@
                                 <i data-feather="search" style="width: 18px; height: 18px; color: #6b7280;"></i>
                             </span>
                         </div>
-                        <input type="text" wire:model.live="search" class="form-control" placeholder="Cari judul atau no panggil..." style="border: 2px solid #e5e7eb; border-left: none; border-radius: 0 12px 12px 0; padding: 12px 16px;">
+                        <input type="text" wire:model.live="search" class="form-control" placeholder="Cari judul, pengarang, penerbit, atau no panggil..." style="border: 2px solid #e5e7eb; border-left: none; border-radius: 0 12px 12px 0; padding: 12px 16px;">
                     </div>
                 </div>
 
@@ -348,6 +354,10 @@
                                     </div>
                                     <div style="min-width: 0;">
                                         <h6 style="font-weight: 600; color: #111827; margin-bottom: 4px; font-size: 15px;">{{ $data->judul }}</h6>
+                                        <p style="font-size: 12px; color: #4b5563; margin-bottom: 2px;">
+                                            <i data-feather="user" style="width: 12px; height: 12px;"></i> {{ $data->pengarang ?? 'Tidak diketahui' }} | 
+                                            <i data-feather="printer" style="width: 12px; height: 12px;"></i> {{ $data->penerbit ?? '-' }} ({{ $data->tahun_terbit ?? '-' }})
+                                        </p>
                                         <p style="font-size: 12px; color: #6b7280; margin-bottom: 0;">
                                             <i data-feather="tag" style="width: 12px; height: 12px;"></i> {{ $data->no_panggil ?? '-' }}
                                         </p>
@@ -434,7 +444,7 @@
                             </h6>
                             
                             <div class="row">
-                                <div class="col-md-8">
+                                <div class="col-md-12">
                                     <div class="form-group mb-3">
                                         <label style="font-weight: 600; color: #374151; font-size: 14px;">Judul Buku <span class="text-danger">*</span></label>
                                         <input type="text" class="form-control buku-form-control" wire:model="judul" placeholder="Masukkan judul buku">
@@ -442,7 +452,31 @@
                                     </div>
                                 </div>
 
-                                <div class="col-md-4">
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Pengarang</label>
+                                        <input type="text" class="form-control buku-form-control" wire:model="pengarang" placeholder="Nama Pengarang">
+                                        @error('pengarang') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Penerbit</label>
+                                        <input type="text" class="form-control buku-form-control" wire:model="penerbit" placeholder="Nama Penerbit">
+                                        @error('penerbit') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Tahun Terbit</label>
+                                        <input type="number" class="form-control buku-form-control" wire:model="tahun_terbit" placeholder="Contoh: 2024">
+                                        @error('tahun_terbit') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
                                     <div class="form-group mb-3">
                                         <label style="font-weight: 600; color: #374151; font-size: 14px;">Kategori <span class="text-danger">*</span></label>
                                         <select class="form-control buku-form-control" wire:model="kategori_id">
@@ -560,28 +594,60 @@
                                 Informasi Buku
                             </h6>
 
-                            <div class="form-group mb-3">
-                                <label style="font-weight: 600; color: #374151; font-size: 14px;">Judul Buku <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control buku-form-control" wire:model="judul" placeholder="Masukkan judul buku">
-                                @error('judul') <small class="text-danger">{{ $message }}</small> @enderror
-                            </div>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Judul Buku <span class="text-danger">*</span></label>
+                                        <input type="text" class="form-control buku-form-control" wire:model="judul" placeholder="Masukkan judul buku">
+                                        @error('judul') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
 
-                            <div class="form-group mb-3">
-                                <label style="font-weight: 600; color: #374151; font-size: 14px;">No Panggil (DDC)</label>
-                                <input type="text" class="form-control buku-form-control" wire:model="no_panggil" placeholder="Contoh: 800.001">
-                                @error('no_panggil') <small class="text-danger">{{ $message }}</small> @enderror
-                                <small style="color: #6b7280; font-size: 12px;">Dewey Decimal Classification</small>
-                            </div>
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Pengarang</label>
+                                        <input type="text" class="form-control buku-form-control" wire:model="pengarang" placeholder="Nama Pengarang">
+                                        @error('pengarang') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
 
-                            <div class="form-group mb-0">
-                                <label style="font-weight: 600; color: #374151; font-size: 14px;">Kategori <span class="text-danger">*</span></label>
-                                <select class="form-control buku-form-control" wire:model="kategori_id">
-                                    <option value="">-- Pilih Kategori --</option>
-                                    @foreach($kategori as $kat)
-                                    <option value="{{ $kat->id_kategori }}">{{ $kat->nama }}</option>
-                                    @endforeach
-                                </select>
-                                @error('kategori_id') <small class="text-danger">{{ $message }}</small> @enderror
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Penerbit</label>
+                                        <input type="text" class="form-control buku-form-control" wire:model="penerbit" placeholder="Nama Penerbit">
+                                        @error('penerbit') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Tahun Terbit</label>
+                                        <input type="number" class="form-control buku-form-control" wire:model="tahun_terbit" placeholder="Contoh: 2024">
+                                        @error('tahun_terbit') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="form-group mb-3">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">No Panggil (DDC)</label>
+                                        <input type="text" class="form-control buku-form-control" wire:model="no_panggil" placeholder="Contoh: 800.001">
+                                        @error('no_panggil') <small class="text-danger">{{ $message }}</small> @enderror
+                                        <small style="color: #6b7280; font-size: 12px;">Dewey Decimal Classification</small>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-12">
+                                    <div class="form-group mb-0">
+                                        <label style="font-weight: 600; color: #374151; font-size: 14px;">Kategori <span class="text-danger">*</span></label>
+                                        <select class="form-control buku-form-control" wire:model="kategori_id">
+                                            <option value="">-- Pilih Kategori --</option>
+                                            @foreach($kategori as $kat)
+                                            <option value="{{ $kat->id_kategori }}">{{ $kat->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                        @error('kategori_id') <small class="text-danger">{{ $message }}</small> @enderror
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </form>

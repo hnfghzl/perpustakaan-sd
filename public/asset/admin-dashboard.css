@@ -1,6 +1,6 @@
 /* Base Styles */
 body {
-    font-family: 'Arial', sans-serif;
+    font-family: "Arial", sans-serif;
     overflow-x: hidden;
 }
 
@@ -58,7 +58,7 @@ body {
 .card {
     margin-bottom: 20px;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .card-header {
@@ -83,7 +83,8 @@ body {
 }
 
 /* Form Controls */
-.form-control, .form-select {
+.form-control,
+.form-select {
     width: 100%;
     max-width: 100%;
 }
@@ -92,7 +93,7 @@ body {
 .stat-card {
     padding: 1.5rem;
     border-radius: 10px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 /* Mobile Responsive Styles */
@@ -116,7 +117,7 @@ body {
     }
 
     /* Stack stat cards */
-    .row > [class*='col-'] {
+    .row > [class*="col-"] {
         margin-bottom: 1rem;
     }
 

@@ -8,104 +8,151 @@ use App\Models\Anggota;
 use App\Models\Eksemplar;
 use App\Models\Pengaturan;
 use Livewire\Component;
-use Livewire\WithPagination;
+use Livewire\Attributes\Computed;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Cache;
 use Carbon\Carbon;
 
 class PeminjamanComponent extends Component
 {
     public $id_anggota, $tgl_pinjam, $tgl_jatuh_tempo, $id_peminjaman;
     public $selectedEksemplar = [];
-    public $searchBuku = ''; // Search untuk memilih buku
-    public $searchAnggota = ''; // Search untuk memilih anggota
+    public $searchBuku = '';
+    public $searchAnggota = '';
+    public $selectedAnggotaData = null; // Tambah properti untuk menyimpan data anggota terpilih
+    public $showAnggotaResults = false; // Tambah flag untuk kontrol tampilan hasil pencarian
     public $peminjamanAktifAnggota = 0;
-    public $lastPeminjamanId = null; // ID peminjaman terakhir untuk cetak struk
-    public $showStruk = false; // Toggle modal struk
-    public $pendingEmailPeminjamanId = null; // ID peminjaman yang menunggu email setelah struk ditutup
+    public $lastPeminjamanId = null;
+    public $showStruk = false;
+    public $pendingWaPeminjamanId = null;
+    public $pendingKodeTransaksi = null;
+
+    // Cache pengaturan agar tidak query ulang tiap render
+    protected ?int $cachedDurasi = null;
+    protected ?int $cachedMaxBuku = null;
+
+    protected function getDurasi(): int
+    {
+        if ($this->cachedDurasi === null) {
+            $this->cachedDurasi = (int) Cache::remember('pengaturan_durasi_peminjaman', 300, fn() =>
+                Pengaturan::get('durasi_peminjaman_hari', 7)
+            );
+        }
+        return $this->cachedDurasi;
+    }
+
+    protected function getMaxBuku(): int
+    {
+        if ($this->cachedMaxBuku === null) {
+            $this->cachedMaxBuku = (int) Cache::remember('pengaturan_max_buku', 300, fn() =>
+                Pengaturan::get('max_buku_per_peminjaman', 3)
+            );
+        }
+        return $this->cachedMaxBuku;
+    }
 
     public function mount()
     {
-        // Hanya pustakawan dan kepala yang bisa akses
         if (!in_array(Auth::user()->role, ['kepala', 'pustakawan'])) {
             session()->flash('error', 'Anda tidak memiliki akses ke halaman ini!');
             return redirect()->route('home');
         }
 
-        // Set default tanggal pinjam saja, jatuh tempo diisi manual oleh user
         $this->tgl_pinjam = Carbon::now()->format('Y-m-d');
-        $this->tgl_jatuh_tempo = ''; // Kosongkan, user input manual
+        $this->tgl_jatuh_tempo = Carbon::now()->addDays($this->getDurasi())->format('Y-m-d');
     }
 
     public function render()
     {
-        // HANYA untuk input peminjaman baru - history pindah ke HistoryPeminjamanComponent
-        $anggotaQuery = Anggota::orderBy('nama_anggota', 'asc');
-        
-        // Filter anggota berdasarkan search
-        if ($this->searchAnggota) {
-            $anggotaQuery->where(function($q) {
-                $q->where('nama_anggota', 'like', '%' . $this->searchAnggota . '%')
-                  ->orWhere('jenis_anggota', 'like', '%' . $this->searchAnggota . '%')
-                  ->orWhere('institusi', 'like', '%' . $this->searchAnggota . '%');
-            });
+        // Query anggota — hanya jika ada pencarian
+        $anggotaList = collect();
+        if ($this->searchAnggota && !$this->selectedAnggotaData) {
+            $search = $this->searchAnggota;
+            $anggotaList = Anggota::select('id_anggota', 'nama_anggota', 'nis', 'jenis_anggota', 'institusi')
+                ->where(function($q) use ($search) {
+                    $q->where('nama_anggota', 'like', '%' . $search . '%')
+                      ->orWhere('nis', 'like', '%' . $search . '%')
+                      ->orWhere('jenis_anggota', 'like', '%' . $search . '%')
+                      ->orWhere('institusi', 'like', '%' . $search . '%');
+                })
+                ->orderBy('nama_anggota', 'asc')
+                ->limit(10)
+                ->get();
+            $this->showAnggotaResults = true;
+        } else {
+            $this->showAnggotaResults = false;
         }
-        
-        $anggotaList = $anggotaQuery->get();
-        
-        // Query eksemplar dengan search
-        $eksemplarQuery = Eksemplar::with('buku.kategori')
-            ->where('status_eksemplar', 'tersedia');
-        
-        // Filter berdasarkan search buku
-        if ($this->searchBuku) {
-            $eksemplarQuery->where(function($q) {
-                $q->where('kode_eksemplar', 'like', '%' . $this->searchBuku . '%')
-                  ->orWhereHas('buku', function($q2) {
-                      $q2->where('judul', 'like', '%' . $this->searchBuku . '%')
-                         ->orWhere('no_panggil', 'like', '%' . $this->searchBuku . '%');
-                  })
-                  ->orWhereHas('buku.kategori', function($q3) {
-                      $q3->where('nama', 'like', '%' . $this->searchBuku . '%');
-                  });
-            });
-        }
-        
-        $eksemplarList = $eksemplarQuery->orderBy('kode_eksemplar', 'asc')->get();
 
-        // Load data peminjaman terakhir untuk struk
+        $eksemplarList = $this->eksemplarListComputed;
+
+        // Load struk hanya jika sedang ditampilkan
         $lastPeminjaman = null;
-        if ($this->lastPeminjamanId) {
-            $lastPeminjaman = Peminjaman::with(['anggota', 'user', 'detailPeminjaman.eksemplar.buku'])
-                ->find($this->lastPeminjamanId);
+        if ($this->showStruk && $this->lastPeminjamanId) {
+            $lastPeminjaman = Peminjaman::with([
+                'anggota:id_anggota,nama_anggota,jenis_anggota,institusi,nis',
+                'user:id_user,nama_user',
+                'detailPeminjaman.eksemplar:id_eksemplar,kode_eksemplar,lokasi_rak,id_buku',
+                'detailPeminjaman.eksemplar.buku:id_buku,judul,no_panggil',
+            ])->find($this->lastPeminjamanId);
         }
-
-        // Ambil durasi dan max buku dari pengaturan
-        $durasiPeminjaman = Pengaturan::get('durasi_peminjaman_hari', 7);
-        $maxBukuPerPeminjaman = Pengaturan::get('max_buku_per_peminjaman', 3);
 
         return view('livewire.peminjaman-modern', [
-            'anggotaList' => $anggotaList,
-            'eksemplarList' => $eksemplarList,
-            'lastPeminjaman' => $lastPeminjaman,
-            'durasiPeminjaman' => $durasiPeminjaman,
-            'maxBukuPerPeminjaman' => $maxBukuPerPeminjaman
+            'anggotaList'         => $anggotaList,
+            'eksemplarList'       => $eksemplarList,
+            'lastPeminjaman'      => $lastPeminjaman,
+            'durasiPeminjaman'    => $this->getDurasi(),
+            'maxBukuPerPeminjaman' => $this->getMaxBuku(),
         ])->layoutData(['title' => 'Transaksi Peminjaman']);
     }
 
     public function updatedSelectedEksemplar()
     {
-        // Debug: Log setiap kali selectedEksemplar berubah
-        Log::info('Selected Eksemplar Updated', [
-            'selected' => $this->selectedEksemplar,
-            'count' => count($this->selectedEksemplar)
-        ]);
+        // Tidak perlu log debug di production - dihapus untuk performa
+    }
+
+    #[Computed(cache: true, seconds: 0)]
+    public function eksemplarListComputed()
+    {
+        if (!$this->id_anggota) {
+            return collect();
+        }
+
+        $query = Eksemplar::select(
+                'eksemplar.id_eksemplar',
+                'eksemplar.kode_eksemplar',
+                'eksemplar.lokasi_rak',
+                'eksemplar.id_buku'
+            )
+            ->join('buku', 'eksemplar.id_buku', '=', 'buku.id_buku')
+            ->leftJoin('kategori', 'buku.kategori_id', '=', 'kategori.id_kategori')
+            ->where('eksemplar.status_eksemplar', 'tersedia')
+            ->with([
+                'buku:id_buku,judul,no_panggil,kategori_id',
+                'buku.kategori:id_kategori,nama',
+            ]);
+
+        if ($this->searchBuku) {
+            $search = $this->searchBuku;
+            $query->where(function($q) use ($search) {
+                $q->where('eksemplar.kode_eksemplar', 'like', '%' . $search . '%')
+                  ->orWhere('buku.judul', 'like', '%' . $search . '%')
+                  ->orWhere('buku.pengarang', 'like', '%' . $search . '%')
+                  ->orWhere('buku.penerbit', 'like', '%' . $search . '%')
+                  ->orWhere('buku.tahun_terbit', 'like', '%' . $search . '%')
+                  ->orWhere('buku.no_panggil', 'like', '%' . $search . '%')
+                  ->orWhere('kategori.nama', 'like', '%' . $search . '%');
+            });
+        }
+
+        return $query->orderBy('eksemplar.id_eksemplar', 'desc')
+            ->limit(50)
+            ->get();
     }
 
     public function updatedIdAnggota()
     {
-        // Cek peminjaman aktif saat anggota dipilih
         if ($this->id_anggota) {
             $this->peminjamanAktifAnggota = Peminjaman::where('id_anggota', $this->id_anggota)
                 ->where('status_buku', 'dipinjam')
@@ -115,16 +162,50 @@ class PeminjamanComponent extends Component
         }
     }
 
+    public function updatedTglPinjam()
+    {
+        if ($this->tgl_pinjam) {
+            $this->tgl_jatuh_tempo = Carbon::parse($this->tgl_pinjam)
+                ->addDays($this->getDurasi())
+                ->format('Y-m-d');
+        }
+    }
+
+    public function selectAnggota($id)
+    {
+        $this->selectedAnggotaData = Anggota::find($id);
+        if ($this->selectedAnggotaData) {
+            $this->id_anggota = $this->selectedAnggotaData->id_anggota;
+            $this->searchAnggota = $this->selectedAnggotaData->nama_anggota;
+            $this->peminjamanAktifAnggota = Peminjaman::where('id_anggota', $this->id_anggota)
+                ->where('status_buku', 'dipinjam')
+                ->count();
+        }
+        $this->showAnggotaResults = false;
+        $this->dispatch('refresh-icons');
+    }
+
+    public function deselectAnggota()
+    {
+        $this->selectedAnggotaData = null;
+        $this->id_anggota = '';
+        $this->searchAnggota = '';
+        $this->peminjamanAktifAnggota = 0;
+        $this->showAnggotaResults = false;
+        $this->dispatch('refresh-icons'); // Pastikan icon refresh
+    }
+
     public function resetInput()
     {
         $this->id_anggota = '';
         $this->tgl_pinjam = Carbon::now()->format('Y-m-d');
-        $this->tgl_jatuh_tempo = ''; // Kosongkan, user input manual
+        $this->tgl_jatuh_tempo = Carbon::now()->addDays($this->getDurasi())->format('Y-m-d');
         $this->selectedEksemplar = [];
         $this->id_peminjaman = '';
         $this->peminjamanAktifAnggota = 0;
         $this->searchAnggota = '';
-        // JANGAN reset lastPeminjamanId dan showStruk agar modal struk tetap tampil
+        $this->selectedAnggotaData = null; // Reset data anggota
+        $this->dispatch('refresh-icons'); // Pastikan icon refresh
     }
 
     public function cetakStruk($id)
@@ -135,56 +216,37 @@ class PeminjamanComponent extends Component
 
     public function closeStruk()
     {
-        Log::info('closeStruk() dipanggil', [
-            'pendingEmailPeminjamanId' => $this->pendingEmailPeminjamanId
-        ]);
-        
-        // Kirim email SETELAH user tutup struk (setelah print)
-        if ($this->pendingEmailPeminjamanId) {
+        // Kirim WA SETELAH user tutup struk (setelah print)
+        if ($this->pendingWaPeminjamanId) {
             $peminjaman = Peminjaman::with(['anggota', 'detailPeminjaman.eksemplar.buku'])
-                ->find($this->pendingEmailPeminjamanId);
+                ->find($this->pendingWaPeminjamanId);
             
-            if ($peminjaman && $peminjaman->anggota && $peminjaman->anggota->email) {
+            if ($peminjaman && $peminjaman->anggota && $peminjaman->anggota->no_hp) {
                 try {
-                    // Ambil detail buku yang dipinjam
                     $detailBuku = [];
                     foreach ($peminjaman->detailPeminjaman as $detail) {
                         $detailBuku[] = [
-                            'judul' => $detail->eksemplar->buku->judul,
+                            'judul'          => $detail->eksemplar->buku->judul,
                             'kode_eksemplar' => $detail->eksemplar->kode_eksemplar
                         ];
                     }
-
-                    // Kirim notifikasi email
-                    $peminjaman->anggota->notify(new \App\Notifications\PeminjamanBukuNotification($peminjaman, $detailBuku));
-                    
-                    Log::info('Email notifikasi peminjaman terkirim setelah print struk', [
-                        'email' => $peminjaman->anggota->email,
-                        'kode_transaksi' => $peminjaman->kode_transaksi
-                    ]);
-                    
-                    // Dispatch event untuk menampilkan alert sukses
-                    $this->dispatch('email-sent', email: $peminjaman->anggota->email);
-                    
-                } catch (\Exception $emailError) {
-                    Log::warning('Gagal kirim email notifikasi', [
-                        'error' => $emailError->getMessage(),
-                        'email' => $peminjaman->anggota->email
-                    ]);
-                    
-                    // Dispatch event untuk menampilkan alert error
-                    $this->dispatch('email-failed', error: 'Gagal mengirim email');
+                    $notif = new \App\Notifications\PeminjamanBukuNotification($peminjaman, $detailBuku);
+                    $notif->sendWhatsapp($peminjaman->anggota);
+                    $this->dispatch('wa-sent', no_hp: $peminjaman->anggota->no_hp);
+                } catch (\Exception $waError) {
+                    Log::warning('Gagal kirim WA notifikasi peminjaman', ['error' => $waError->getMessage()]);
                 }
             }
-            
-            // Reset pending email ID
-            $this->pendingEmailPeminjamanId = null;
+            $this->pendingWaPeminjamanId = null;
+        }
+        
+        if ($this->pendingKodeTransaksi) {
+            session()->flash('success', 'Peminjaman berhasil dicatat! Kode: ' . $this->pendingKodeTransaksi);
+            $this->pendingKodeTransaksi = null;
         }
         
         $this->showStruk = false;
         $this->lastPeminjamanId = null;
-        
-        // Reset input form setelah user tutup struk
         $this->resetInput();
         $this->searchBuku = '';
         $this->searchAnggota = '';
@@ -208,129 +270,92 @@ class PeminjamanComponent extends Component
         return 'PJM-' . $date . '-' . str_pad($newNumber, 4, '0', STR_PAD_LEFT);
     }
 
-    public function store()
+    public function store($items = [])
     {
-        // Debug: Log data yang akan disimpan
-        Log::info('Store Peminjaman', [
-            'id_anggota' => $this->id_anggota,
-            'tgl_pinjam' => $this->tgl_pinjam,
-            'tgl_jatuh_tempo' => $this->tgl_jatuh_tempo,
-            'selectedEksemplar' => $this->selectedEksemplar
-        ]);
+        // Terima selected eksemplar dari Alpine picker via component.call('store', selected)
+        $this->selectedEksemplar = is_array($items) ? array_map('intval', $items) : [];
+        $selectedEksemplar = $this->selectedEksemplar;
+        $maxBuku = $this->getMaxBuku();
 
-        // Convert selectedEksemplar values to integers
-        $selectedEksemplar = array_map('intval', $this->selectedEksemplar);
-
-        // Ambil max buku dari pengaturan
-        $maxBuku = Pengaturan::get('max_buku_per_peminjaman', 3);
-
+        // Validasi — Livewire akan handle ValidationException secara otomatis
         $this->validate([
-            'id_anggota' => 'required|exists:anggota,id_anggota',
-            'tgl_pinjam' => 'required|date',
-            'tgl_jatuh_tempo' => 'required|date|after_or_equal:tgl_pinjam',
-            'selectedEksemplar' => 'required|array|min:1|max:' . $maxBuku
+            'id_anggota'        => 'required|exists:anggota,id_anggota',
+            'tgl_pinjam'        => 'required|date',
+            'tgl_jatuh_tempo'   => 'required|date|after_or_equal:tgl_pinjam',
+            'selectedEksemplar' => 'required|array|min:1|max:' . $maxBuku,
         ], [
-            'id_anggota.required' => 'Anggota harus dipilih!',
-            'id_anggota.exists' => 'Anggota tidak valid!',
-            'tgl_pinjam.required' => 'Tanggal pinjam harus diisi!',
-            'tgl_jatuh_tempo.required' => 'Tanggal jatuh tempo harus diisi!',
+            'id_anggota.required'          => 'Anggota harus dipilih!',
+            'id_anggota.exists'            => 'Anggota tidak valid!',
+            'tgl_pinjam.required'          => 'Tanggal pinjam harus diisi!',
+            'tgl_jatuh_tempo.required'     => 'Tanggal jatuh tempo harus diisi!',
             'tgl_jatuh_tempo.after_or_equal' => 'Tanggal jatuh tempo harus setelah tanggal pinjam!',
-            'selectedEksemplar.required' => 'Pilih minimal 1 buku!',
-            'selectedEksemplar.min' => 'Pilih minimal 1 buku!',
-            'selectedEksemplar.max' => 'Maksimal hanya boleh meminjam ' . $maxBuku . ' buku!'
+            'selectedEksemplar.required'   => 'Pilih minimal 1 buku!',
+            'selectedEksemplar.min'        => 'Pilih minimal 1 buku!',
+            'selectedEksemplar.max'        => 'Maksimal ' . $maxBuku . ' buku per peminjaman!',
         ]);
 
-        // VALIDASI 0: Cek durasi maksimal peminjaman (dari pengaturan database)
-        $maxDurasi = Pengaturan::get('durasi_peminjaman_hari', 7);
-        $tglPinjam = Carbon::parse($this->tgl_pinjam);
-        $tglJatuhTempo = Carbon::parse($this->tgl_jatuh_tempo);
-        $selisihHari = $tglPinjam->diffInDays($tglJatuhTempo);
-
+        // Cek durasi
+        $maxDurasi     = $this->getDurasi();
+        $selisihHari   = Carbon::parse($this->tgl_pinjam)->diffInDays(Carbon::parse($this->tgl_jatuh_tempo));
         if ($selisihHari > $maxDurasi) {
-            session()->flash('error', 'Peminjaman hanya diperbolehkan maksimal ' . $maxDurasi . ' hari. Tanggal jatuh tempo yang Anda pilih melampaui batas tersebut.');
+            session()->flash('error', 'Peminjaman maksimal ' . $maxDurasi . ' hari.');
             return;
         }
 
-        // VALIDASI 1: Cek apakah anggota masih memiliki peminjaman aktif
+        // Cek peminjaman aktif anggota
         $peminjamanAktif = Peminjaman::where('id_anggota', $this->id_anggota)
             ->where('status_buku', 'dipinjam')
             ->count();
-
         if ($peminjamanAktif > 0) {
             $anggota = Anggota::find($this->id_anggota);
-            session()->flash('error', "Anggota {$anggota->nama_anggota} masih memiliki {$peminjamanAktif} peminjaman aktif yang belum dikembalikan! Kembalikan buku terlebih dahulu di menu Pengembalian sebelum melakukan peminjaman baru.");
+            session()->flash('error', "Anggota {$anggota->nama_anggota} masih memiliki {$peminjamanAktif} peminjaman aktif!");
             return;
         }
 
-        // VALIDASI 2: Cek apakah ada buku yang sama (id_buku duplikat)
-        $eksemplarData = Eksemplar::whereIn('id_eksemplar', $selectedEksemplar)->get();
-        $bukuIds = $eksemplarData->pluck('id_buku')->toArray();
-        
+        // Cek buku duplikat
+        $bukuIds = Eksemplar::whereIn('id_eksemplar', $selectedEksemplar)->pluck('id_buku')->toArray();
         if (count($bukuIds) !== count(array_unique($bukuIds))) {
-            session()->flash('error', 'Tidak boleh meminjam eksemplar dari buku yang sama! Pilih buku yang berbeda.');
+            session()->flash('error', 'Tidak boleh meminjam eksemplar dari buku yang sama!');
             return;
         }
 
         DB::beginTransaction();
         try {
-            // Buat peminjaman
             $peminjaman = Peminjaman::create([
-                'id_user' => Auth::id(),
-                'id_anggota' => $this->id_anggota,
-                'tgl_pinjam' => $this->tgl_pinjam,
-                'tgl_jatuh_tempo' => $this->tgl_jatuh_tempo,
-                'denda_total' => 0,
+                'id_user'           => Auth::id(),
+                'id_anggota'        => $this->id_anggota,
+                'tgl_pinjam'        => $this->tgl_pinjam,
+                'tgl_jatuh_tempo'   => $this->tgl_jatuh_tempo,
+                'denda_total'       => 0,
                 'jumlah_peminjaman' => count($selectedEksemplar),
-                'status_buku' => 'dipinjam',
-                'kode_transaksi' => $this->generateKodeTransaksi()
+                'status_buku'       => 'dipinjam',
+                'kode_transaksi'    => $this->generateKodeTransaksi(),
             ]);
 
-            // Buat detail peminjaman dan update status eksemplar
             foreach ($selectedEksemplar as $id_eksemplar) {
                 DetailPeminjaman::create([
-                    'id_peminjaman' => $peminjaman->id_peminjaman,
-                    'id_eksemplar' => $id_eksemplar,
-                    'tgl_kembali' => null,
-                    'kondisi_kembali' => 'baik',
-                    'denda_item' => 0
+                    'id_peminjaman'  => $peminjaman->id_peminjaman,
+                    'id_eksemplar'   => $id_eksemplar,
+                    'tgl_kembali'    => null,
+                    'kondisi_kembali'=> 'baik',
+                    'denda_item'     => 0,
                 ]);
-
-                // Update status eksemplar menjadi dipinjam
                 Eksemplar::where('id_eksemplar', $id_eksemplar)
                     ->update(['status_eksemplar' => 'dipinjam']);
             }
 
             DB::commit();
-            
-            Log::info('Peminjaman berhasil disimpan', [
-                'kode_transaksi' => $peminjaman->kode_transaksi,
-                'id_peminjaman' => $peminjaman->id_peminjaman
-            ]);
 
-            // Simpan ID peminjaman untuk kirim email SETELAH user tutup struk
-            $this->pendingEmailPeminjamanId = $peminjaman->id_peminjaman;
+            $this->pendingWaPeminjamanId = $peminjaman->id_peminjaman;
+            $this->pendingKodeTransaksi  = $peminjaman->kode_transaksi;
+            $this->lastPeminjamanId      = $peminjaman->id_peminjaman;
+            $this->showStruk             = true;
 
-            // Tutup modal Bootstrap dulu
             $this->dispatch('close-modal');
-            
-            // Set ID peminjaman dan tampilkan struk LANGSUNG
-            $this->lastPeminjamanId = $peminjaman->id_peminjaman;
-            $this->showStruk = true;
-            
-            // Dispatch event untuk refresh icons
             $this->dispatch('refresh-icons');
-            
-            // Flash message success
-            session()->flash('success', 'Peminjaman berhasil dicatat! Kode: ' . $peminjaman->kode_transaksi);
-            
+
         } catch (\Exception $e) {
             DB::rollBack();
-            
-            Log::error('Gagal menyimpan peminjaman', [
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString()
-            ]);
-            
             session()->flash('error', 'Gagal mencatat peminjaman: ' . $e->getMessage());
         }
     }
@@ -397,16 +422,8 @@ class PeminjamanComponent extends Component
 
     public function viewDetail($id)
     {
-        Log::info('viewDetail called', ['id' => $id]);
-        
         $this->detailPeminjaman = Peminjaman::with(['anggota', 'user', 'detailPeminjaman.eksemplar.buku'])
             ->find($id);
-        
-        Log::info('Detail loaded', [
-            'found' => $this->detailPeminjaman ? 'yes' : 'no',
-            'kode' => $this->detailPeminjaman->kode_transaksi ?? 'null'
-        ]);
-        
         $this->showDetail = true;
     }
 
@@ -414,19 +431,16 @@ class PeminjamanComponent extends Component
     {
         $this->showDetail = false;
         $this->detailPeminjaman = null;
-        
-        // Dispatch event to refresh feather icons
         $this->dispatch('refresh-icons');
-        $this->dispatch('modal-closed'); // Event tambahan
     }
 
     public function updatingSearch()
     {
-        $this->resetPage();
+        // PeminjamanComponent tidak pakai pagination — method ini tidak diperlukan
     }
 
     public function updatingFilterStatus()
     {
-        $this->resetPage();
+        // PeminjamanComponent tidak pakai pagination — method ini tidak diperlukan
     }
 }

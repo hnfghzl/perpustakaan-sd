@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Dashboard' }}</title>
+    <link rel="icon" type="image/png" href="{{ asset('asset/Logo.png') }}">
 
     {{-- Bootstrap & Custom CSS --}}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
@@ -374,23 +375,29 @@
         document.addEventListener('DOMContentLoaded', function() {
             const sidebarLinks = document.querySelectorAll('.sidebar .nav-link');
             
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        closeSidebar();
-                    }
+            if (sidebarLinks && sidebarLinks.length > 0) {
+                sidebarLinks.forEach(link => {
+                    link.addEventListener('click', function() {
+                        if (window.innerWidth <= 768) {
+                            closeSidebar();
+                        }
+                    });
                 });
-            });
+            }
         });
 
         // Auto-hide alert setelah 5 detik
         document.addEventListener('DOMContentLoaded', function() {
             setTimeout(function() {
                 const alerts = document.querySelectorAll('.alert');
-                alerts.forEach(function(alert) {
-                    const bsAlert = new bootstrap.Alert(alert);
-                    bsAlert.close();
-                });
+                if (alerts && alerts.length > 0) {
+                    alerts.forEach(function(alert) {
+                        if (typeof bootstrap !== 'undefined' && bootstrap.Alert) {
+                            const bsAlert = new bootstrap.Alert(alert);
+                            bsAlert.close();
+                        }
+                    });
+                }
             }, 5000);
         });
 

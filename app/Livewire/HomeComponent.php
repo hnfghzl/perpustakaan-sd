@@ -23,8 +23,9 @@ class HomeComponent extends Component
         // Hitung total buku
         $totalBuku = Buku::count() ?? 0;
 
-        // Hitung peminjaman aktif dari eksemplar yang statusnya dipinjam
-        $peminjamanAktif = Eksemplar::where('status_eksemplar', 'dipinjam')->count() ?? 0;
+        // Hitung peminjaman aktif dari tabel peminjaman (lebih akurat daripada count eksemplar)
+        // Karena 1 transaksi bisa pinjam multiple buku
+        $peminjamanAktif = Peminjaman::where('status_buku', 'dipinjam')->count() ?? 0;
 
         // Hitung buku yang sudah lewat waktu (terlambat) 
         // Ambil dari peminjaman yang masih aktif (status_buku = dipinjam) dan melewati jatuh tempo

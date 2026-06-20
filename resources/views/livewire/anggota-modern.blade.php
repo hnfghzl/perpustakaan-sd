@@ -194,7 +194,7 @@
                             <i data-feather="search" style="width: 18px; height: 18px; color: #6b7280;"></i>
                         </span>
                     </div>
-                    <input type="text" wire:model.live="search" class="form-control anggota-search-modern" placeholder="Cari nama, jenis, atau institusi..." style="border-left: none;">
+                    <input type="text" wire:model.live="search" class="form-control anggota-search-modern" placeholder="Cari nama, NIS/ID anggota, jenis, atau institusi..." style="border-left: none;">
                 </div>
             </div>
 
@@ -258,15 +258,41 @@
                         {{-- Actions --}}
                         <div class="col-md-3 text-right">
                             <div class="d-flex justify-content-end align-items-center" style="gap: 8px;">
+                                {{-- Cetak Kartu Anggota - selalu tampil --}}
+                                <a href="{{ route('cetakKartuAnggota', $data->id_anggota) }}"
+                                   target="_blank"
+                                   title="Cetak Kartu Anggota"
+                                   class="anggota-btn-action"
+                                   style="display: inline-flex; align-items: center; gap: 5px; text-decoration: none;">
+                                    <i data-feather="credit-card" style="width: 14px; height: 14px; color: #059669;"></i> Kartu
+                                </a>
                                 @if($isPustakawan)
                                 <button wire:click="edit({{ $data->id_anggota }})" data-toggle="modal" data-target="#editAnggotaModal" class="anggota-btn-action">
                                     <i data-feather="edit-2" style="width: 14px; height: 14px;"></i> Edit
                                 </button>
-                                <button onclick="confirm('Yakin hapus anggota ini?') || event.stopImmediatePropagation()" wire:click="confirmDelete({{ $data->id_anggota }})" class="anggota-btn-delete">
+                                <button
+                                    wire:click="resetPassword({{ $data->id_anggota }})"
+                                    wire:confirm="Reset password {{ $data->nama_anggota }} ke tanggal lahir?"
+                                    title="Reset Password ke Tanggal Lahir"
+                                    style="background:#fff3cd;color:#856404;border:none;padding:8px 12px;border-radius:10px;font-weight:500;font-size:12px;transition:all .2s;cursor:pointer;"
+                                >
+                                    <i data-feather="key" style="width: 13px; height: 13px;"></i>
+                                </button>
+                                <button wire:click="deleteNow({{ $data->id_anggota }})" wire:confirm="⚠️ Yakin ingin menghapus anggota '{{ $data->nama_anggota }}'? Data yang dihapus tidak dapat dikembalikan!" class="anggota-btn-delete">
                                     <i data-feather="trash-2" style="width: 14px; height: 14px;"></i>
                                 </button>
                                 @endif
                             </div>
+                            {{-- Indikator status password --}}
+                            @if($isPustakawan)
+                            <div class="mt-1 text-right">
+                                @if($data->password)
+                                    <span style="font-size:.68rem;color:#065f46;background:#d1fae5;padding:.1rem .4rem;border-radius:4px;">🔑 Aktif</span>
+                                @else
+                                    <span style="font-size:.68rem;color:#92400e;background:#fef3c7;padding:.1rem .4rem;border-radius:4px;">⚠ Belum ada password</span>
+                                @endif
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>
@@ -317,10 +343,30 @@
                                     @error('nama_anggota') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
+                                    <label class="anggota-form-group">NIS / ID Anggota</label>
+                                    <input type="text" class="anggota-form-control" wire:model="nis" placeholder="264154-1-001">
+                                    @error('nis') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
+                                    <small class="text-muted d-block mt-1" style="font-size:.7rem; line-height:1.4;">
+                                        <strong>YY</strong>-4154-<strong>K</strong>-<strong>UUU</strong><br>
+                                        YY=tahun masuk &middot; K=kelas &middot; UUU=no urut
+                                    </small>
+                                </div>
+
+                                <div class="col-md-3 mb-3">
                                     <label class="anggota-form-group">Email <span class="text-danger">*</span></label>
                                     <input type="email" class="anggota-form-control" wire:model="email" placeholder="email@example.com">
                                     @error('email') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="anggota-form-group">No. WhatsApp</label>
+                                    <div style="position:relative;">
+                                        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:#6b7280;">+62</span>
+                                        <input type="text" class="anggota-form-control" wire:model="no_hp" placeholder="8123456789" style="padding-left:40px;">
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size:.7rem;">Untuk notifikasi WA. Awalan 0 tidak perlu diisi.</small>
+                                    @error('no_hp') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
                                 </div>
 
                                 <div class="col-md-4 mb-3">
@@ -428,10 +474,30 @@
                                     @error('nama_anggota') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
                                 </div>
 
-                                <div class="col-md-6 mb-3">
+                                <div class="col-md-3 mb-3">
+                                    <label class="anggota-form-group">NIS / ID Anggota</label>
+                                    <input type="text" class="anggota-form-control" wire:model="nis" placeholder="264154-1-001">
+                                    @error('nis') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
+                                    <small class="text-muted d-block mt-1" style="font-size:.7rem; line-height:1.4;">
+                                        <strong>YY</strong>-4154-<strong>K</strong>-<strong>UUU</strong><br>
+                                        YY=tahun masuk &middot; K=kelas &middot; UUU=no urut
+                                    </small>
+                                </div>
+
+                                <div class="col-md-3 mb-3">
                                     <label class="anggota-form-group">Email <span class="text-danger">*</span></label>
                                     <input type="email" class="anggota-form-control" wire:model="email" placeholder="email@example.com">
                                     @error('email') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
+                                </div>
+
+                                <div class="col-md-3 mb-3">
+                                    <label class="anggota-form-group">No. WhatsApp</label>
+                                    <div style="position:relative;">
+                                        <span style="position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:13px;color:#6b7280;">+62</span>
+                                        <input type="text" class="anggota-form-control" wire:model="no_hp" placeholder="8123456789" style="padding-left:40px;">
+                                    </div>
+                                    <small class="text-muted d-block mt-1" style="font-size:.7rem;">Untuk notifikasi WA. Awalan 0 tidak perlu diisi.</small>
+                                    @error('no_hp') <small class="text-danger mt-1 d-block">{{ $message }}</small> @enderror
                                 </div>
 
                                 <div class="col-md-4 mb-3">
@@ -527,13 +593,6 @@
         Livewire.hook('element.updated', () => refreshFeatherIcons());
         Livewire.hook('morph.updated', () => refreshFeatherIcons());
         Livewire.hook('commit', () => refreshFeatherIcons());
-
-        // Delete confirmation handler
-        window.addEventListener('confirm-delete-anggota', event => {
-            if (confirm('Yakin ingin menghapus anggota ini?')) {
-                Livewire.dispatch('deleteAnggota', { id: event.detail.id });
-            }
-        });
 
         // Auto-hide alerts
         setTimeout(() => {

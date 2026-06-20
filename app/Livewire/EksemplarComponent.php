@@ -44,7 +44,10 @@ class EksemplarComponent extends Component
                 $q->where('kode_eksemplar', 'like', '%' . $this->search . '%')
                     ->orWhere('lokasi_rak', 'like', '%' . $this->search . '%')
                     ->orWhereHas('buku', function ($q2) {
-                        $q2->where('judul', 'like', '%' . $this->search . '%');
+                        $q2->where('judul', 'like', '%' . $this->search . '%')
+                            ->orWhere('pengarang', 'like', '%' . $this->search . '%')
+                            ->orWhere('penerbit', 'like', '%' . $this->search . '%')
+                            ->orWhere('tahun_terbit', 'like', '%' . $this->search . '%');
                     });
             });
         }
@@ -126,20 +129,25 @@ class EksemplarComponent extends Component
             'status_eksemplar.in' => 'Status tidak valid! Status "Dipinjam" dikelola otomatis oleh sistem.'
         ]);
 
-        Eksemplar::create([
-            'id_buku' => $this->id_buku,
-            'kode_eksemplar' => $this->kode_eksemplar,
-            'lokasi_rak' => $this->lokasi_rak,
-            'tipe_lokasi' => $this->tipe_lokasi,
-            'status_eksemplar' => $this->status_eksemplar,
-            'harga' => $this->harga,
-            'tgl_diterima' => $this->tgl_diterima,
-            'sumber_perolehan' => $this->sumber_perolehan,
-            'faktur' => $this->faktur
-        ]);
+        try {
+            Eksemplar::create([
+                'id_buku' => $this->id_buku,
+                'kode_eksemplar' => $this->kode_eksemplar,
+                'lokasi_rak' => $this->lokasi_rak ?: null,
+                'tipe_lokasi' => $this->tipe_lokasi ?: null,
+                'status_eksemplar' => $this->status_eksemplar,
+                'harga' => $this->harga ?: null,
+                'tgl_diterima' => $this->tgl_diterima ?: null,
+                'sumber_perolehan' => $this->sumber_perolehan ?: null,
+                'faktur' => $this->faktur ?: null
+            ]);
 
-        session()->flash('success', 'Eksemplar berhasil ditambahkan!');
-        $this->resetInput();
+            session()->flash('success', 'Eksemplar berhasil ditambahkan!');
+            $this->resetInput();
+        } catch (\Exception $e) {
+            session()->flash('error', 'Gagal menambahkan eksemplar: ' . $e->getMessage());
+            \Log::error('Error store eksemplar: ' . $e->getMessage());
+        }
     }
 
     public function edit($id)
@@ -184,13 +192,13 @@ class EksemplarComponent extends Component
             $eksemplar->update([
                 'id_buku' => $this->id_buku,
                 'kode_eksemplar' => $this->kode_eksemplar,
-                'lokasi_rak' => $this->lokasi_rak,
-                'tipe_lokasi' => $this->tipe_lokasi,
+                'lokasi_rak' => $this->lokasi_rak ?: null,
+                'tipe_lokasi' => $this->tipe_lokasi ?: null,
                 'status_eksemplar' => $this->status_eksemplar,
-                'harga' => $this->harga,
-                'tgl_diterima' => $this->tgl_diterima,
-                'sumber_perolehan' => $this->sumber_perolehan,
-                'faktur' => $this->faktur
+                'harga' => $this->harga ?: null,
+                'tgl_diterima' => $this->tgl_diterima ?: null,
+                'sumber_perolehan' => $this->sumber_perolehan ?: null,
+                'faktur' => $this->faktur ?: null
             ]);
 
             session()->flash('success', 'Eksemplar berhasil diupdate!');

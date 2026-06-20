@@ -149,150 +149,122 @@
                 </div>
             </div>
 
-            {{-- Email Configuration Section --}}
-            <div style="background: #f0f9ff; border: 2px solid #0ea5e9; border-radius: 12px; padding: 24px; margin-top: 32px; margin-bottom: 24px;">
-                <h5 style="color: #0c4a6e; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center;">
-                    <i data-feather="mail" style="width: 22px; height: 22px; margin-right: 10px; color: #0ea5e9;"></i>
-                    Konfigurasi Email SMTP
+            {{-- ======== IDENTITAS SEKOLAH (untuk Kartu Anggota) ======== --}}
+            <div style="background: #f0f9ff; border: 2px solid #0284c7; border-radius: 12px; padding: 24px; margin-top: 32px; margin-bottom: 24px;">
+                <h5 style="color: #075985; font-weight: 700; margin-bottom: 6px; display: flex; align-items: center;">
+                    <i data-feather="credit-card" style="width: 22px; height: 22px; margin-right: 10px; color: #0284c7;"></i>
+                    Identitas Sekolah (Kartu Anggota)
                 </h5>
                 <p style="color: #0369a1; font-size: 13px; margin-bottom: 20px;">
-                    Setting email untuk notifikasi peminjaman dan pengembalian buku
+                    Data berikut tampil di kartu anggota perpustakaan saat dicetak.
+                </p>
+                <div class="row">
+                    {{-- Nama Sekolah --}}
+                    <div class="col-md-12 mb-3">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Nama Sekolah</label>
+                        <input type="text" wire:model="pengaturan.nama_sekolah" placeholder="Contoh: SD MUHAMMADIYAH KARANGWARU"
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 3px rgba(2,132,199,0.1)';"
+                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                    </div>
+                    {{-- Alamat Sekolah --}}
+                    <div class="col-md-8 mb-3">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Alamat Sekolah</label>
+                        <input type="text" wire:model="pengaturan.alamat_sekolah" placeholder="Contoh: Jl. Karangwaru Lor No. 1"
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 3px rgba(2,132,199,0.1)';"
+                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                    </div>
+                    {{-- Telepon Sekolah --}}
+                    <div class="col-md-4 mb-3">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Telepon Sekolah</label>
+                        <input type="text" wire:model="pengaturan.telp_sekolah" placeholder="Contoh: (0274) 123456"
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 3px rgba(2,132,199,0.1)';"
+                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                    </div>
+                    {{-- Kota --}}
+                    <div class="col-md-4 mb-3">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Kota</label>
+                        <input type="text" wire:model="pengaturan.kota_sekolah" placeholder="Contoh: Yogyakarta"
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 3px rgba(2,132,199,0.1)';"
+                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                    </div>
+                    {{-- Nama Kepala Sekolah --}}
+                    <div class="col-md-5 mb-3">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">Nama Kepala Sekolah</label>
+                        <input type="text" wire:model="pengaturan.nama_kepala_sekolah" placeholder="Contoh: Budi Santoso, S.Pd."
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 3px rgba(2,132,199,0.1)';"
+                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                    </div>
+                    {{-- NIP Kepala --}}
+                    <div class="col-md-3 mb-3">
+                        <label style="color: #374151; font-weight: 600; margin-bottom: 8px; display: block; font-size: 14px;">NIP Kepala Sekolah</label>
+                        <input type="text" wire:model="pengaturan.nip_kepala_sekolah" placeholder="Kosongkan jika tidak ada"
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;"
+                            onfocus="this.style.borderColor='#0284c7'; this.style.boxShadow='0 0 0 3px rgba(2,132,199,0.1)';"
+                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
+                    </div>
+                </div>
+            </div>
+
+            {{-- WhatsApp (Fonnte) Configuration Section --}}
+            <div style="background: #f0fdf4; border: 2px solid #16a34a; border-radius: 12px; padding: 24px; margin-top: 32px; margin-bottom: 24px;">
+                <h5 style="color: #14532d; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center;">
+                    <i data-feather="message-circle" style="width: 22px; height: 22px; margin-right: 10px; color: #16a34a;"></i>
+                    Konfigurasi Notifikasi WhatsApp (Fonnte)
+                </h5>
+                <p style="color: #166534; font-size: 13px; margin-bottom: 20px;">
+                    Masukkan token Fonnte untuk mengirim notifikasi WA otomatis ke anggota saat peminjaman &amp; pengembalian buku.
                 </p>
 
                 <div class="row">
-                    {{-- Email Host --}}
-                    <div class="col-md-6 mb-4">
+                    <div class="col-md-12 mb-3">
                         <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Email Host (SMTP)
+                            Token Fonnte
                         </label>
-                        <input type="text" wire:model="pengaturan.email_host" placeholder="smtp.gmail.com"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
+                        <input type="password" wire:model="pengaturan.fonnte_token" placeholder="Paste token Fonnte di sini..."
+                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s; font-family: monospace;"
+                            onfocus="this.style.borderColor='#16a34a'; this.style.boxShadow='0 0 0 3px rgba(22, 163, 74, 0.1)';"
                             onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
                         <small style="color: #6b7280; font-size: 12px; margin-top: 6px; display: block;">
-                            Contoh: smtp.gmail.com
+                            Dapatkan token di <strong>fonnte.com</strong> &rarr; Login &rarr; <strong>Devices</strong> &rarr; Tambah Device &rarr; Scan QR &rarr; Copy Token.
                         </small>
-                        @error('pengaturan.email_host')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Email Port --}}
-                    <div class="col-md-3 mb-4">
-                        <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Port
-                        </label>
-                        <input type="number" wire:model="pengaturan.email_port"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
-                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                        <small style="color: #6b7280; font-size: 12px; margin-top: 6px; display: block;">
-                            465 (SSL) atau 587 (TLS)
-                        </small>
-                        @error('pengaturan.email_port')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Email Encryption --}}
-                    <div class="col-md-3 mb-4">
-                        <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Enkripsi
-                        </label>
-                        <select wire:model="pengaturan.email_encryption"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
-                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                            <option value="ssl">SSL</option>
-                            <option value="tls">TLS</option>
-                        </select>
-                        @error('pengaturan.email_encryption')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Email Username --}}
-                    <div class="col-md-6 mb-4">
-                        <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Email Username
-                        </label>
-                        <input type="email" wire:model="pengaturan.email_username" placeholder="email@sekolah.com"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
-                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                        <small style="color: #6b7280; font-size: 12px; margin-top: 6px; display: block;">
-                            Email yang digunakan untuk login SMTP
-                        </small>
-                        @error('pengaturan.email_username')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Email Password --}}
-                    <div class="col-md-6 mb-4">
-                        <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Email Password / App Password
-                        </label>
-                        <input type="password" wire:model="pengaturan.email_password" placeholder="••••••••••••••••"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
-                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                        <small style="color: #6b7280; font-size: 12px; margin-top: 6px; display: block;">
-                            Untuk Gmail gunakan App Password
-                        </small>
-                        @error('pengaturan.email_password')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Email From Address --}}
-                    <div class="col-md-6 mb-4">
-                        <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Email Pengirim (From Address)
-                        </label>
-                        <input type="email" wire:model="pengaturan.email_from_address" placeholder="perpus@sekolah.com"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
-                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                        <small style="color: #6b7280; font-size: 12px; margin-top: 6px; display: block;">
-                            Email yang ditampilkan sebagai pengirim
-                        </small>
-                        @error('pengaturan.email_from_address')
-                        <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
-                        @enderror
-                    </div>
-
-                    {{-- Email From Name --}}
-                    <div class="col-md-6 mb-4">
-                        <label style="color: #374151; font-weight: 600; margin-bottom: 10px; display: block; font-size: 14px;">
-                            Nama Pengirim (From Name)
-                        </label>
-                        <input type="text" wire:model="pengaturan.email_from_name" placeholder="Perpustakaan Sekolah"
-                            style="width: 100%; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 10px; font-size: 14px; transition: all 0.2s;" 
-                            onfocus="this.style.borderColor='#0ea5e9'; this.style.boxShadow='0 0 0 3px rgba(14, 165, 233, 0.1)';" 
-                            onblur="this.style.borderColor='#e5e7eb'; this.style.boxShadow='none';">
-                        <small style="color: #6b7280; font-size: 12px; margin-top: 6px; display: block;">
-                            Nama institusi yang ditampilkan di email
-                        </small>
-                        @error('pengaturan.email_from_name')
+                        @error('pengaturan.fonnte_token')
                         <div style="color: #ef4444; font-size: 12px; margin-top: 6px;">{{ $message }}</div>
                         @enderror
                     </div>
                 </div>
 
-                {{-- Gmail App Password Guide --}}
-                <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 14px 16px; border-radius: 8px; margin-top: 16px;">
+                {{-- Panduan Fonnte --}}
+                <div style="background: #dcfce7; border-left: 4px solid #16a34a; padding: 14px 16px; border-radius: 8px; margin-top: 8px;">
                     <div style="display: flex; align-items: start;">
-                        <i data-feather="alert-circle" style="width: 18px; height: 18px; margin-right: 10px; color: #f59e0b; flex-shrink: 0; margin-top: 2px;"></i>
-                        <div style="color: #92400e; font-size: 13px; line-height: 1.6;">
-                            <strong>Cara membuat App Password Gmail:</strong><br>
-                            1. Buka <a href="https://myaccount.google.com/apppasswords" target="_blank" style="color: #0ea5e9; text-decoration: underline;">https://myaccount.google.com/apppasswords</a><br>
-                            2. Login dengan akun Gmail sekolah<br>
-                            3. Buat App Password baru dengan nama "Perpustakaan"<br>
-                            4. Copy 16 karakter password dan paste ke field "Email Password" di atas
+                        <i data-feather="info" style="width: 18px; height: 18px; margin-right: 10px; color: #16a34a; flex-shrink: 0; margin-top: 2px;"></i>
+                        <div style="color: #14532d; font-size: 13px; line-height: 1.7;">
+                            <strong>Cara setup Fonnte:</strong><br>
+                            1. Daftar/login ke <a href="https://fonnte.com" target="_blank" style="color: #16a34a; text-decoration: underline;">fonnte.com</a><br>
+                            2. Di menu <strong>Devices</strong>, klik <strong>Add Device</strong><br>
+                            3. Scan QR Code dengan WhatsApp HP yang akan menjadi pengirim<br>
+                            4. Setelah terhubung, copy <strong>Token</strong> device lalu paste di field di atas<br>
+                            5. Pastikan nomor HP anggota sudah diisi di data anggota
                         </div>
                     </div>
                 </div>
+
+                {{-- Status Token --}}
+                @if(!empty($pengaturan['fonnte_token'] ?? ''))
+                <div style="margin-top: 12px; padding: 10px 14px; background: #bbf7d0; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i data-feather="check-circle" style="width: 16px; height: 16px; color: #16a34a;"></i>
+                    <span style="color: #14532d; font-size: 13px; font-weight: 600;">Token Fonnte sudah dikonfigurasi.</span>
+                </div>
+                @else
+                <div style="margin-top: 12px; padding: 10px 14px; background: #fef9c3; border-radius: 8px; display: flex; align-items: center; gap: 8px;">
+                    <i data-feather="alert-circle" style="width: 16px; height: 16px; color: #ca8a04;"></i>
+                    <span style="color: #854d0e; font-size: 13px;">Token belum dikonfigurasi. Notifikasi WA tidak akan terkirim.</span>
+                </div>
+                @endif
             </div>
 
             {{-- Info Box --}}

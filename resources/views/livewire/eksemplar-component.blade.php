@@ -29,7 +29,7 @@
                 {{-- Filter & Search --}}
                 <div class="row mb-3">
                     <div class="col-md-4">
-                        <input type="text" class="form-control" wire:model.live="search" placeholder="🔍 Cari kode, lokasi, atau judul buku...">
+                        <input type="text" class="form-control" wire:model.live="search" placeholder="🔍 Cari kode, lokasi, judul, pengarang, penerbit, atau tahun...">
                     </div>
                     <div class="col-md-4">
                         <select class="form-control" wire:model.live="filterBuku">

@@ -29,37 +29,28 @@ class PengaturanComponent extends Component
     {
         // Validasi
         $this->validate([
-            'pengaturan.durasi_peminjaman_hari' => 'required|integer|min:1|max:90',
-            'pengaturan.denda_per_hari' => 'required|integer|min:0',
-            'pengaturan.denda_rusak' => 'required|integer|min:0',
-            'pengaturan.denda_hilang' => 'required|integer|min:0',
-            'pengaturan.max_buku_per_peminjaman' => 'required|integer|min:1|max:10',
-            'pengaturan.email_host' => 'required|string',
-            'pengaturan.email_port' => 'required|integer',
-            'pengaturan.email_encryption' => 'required|in:ssl,tls',
-            'pengaturan.email_username' => 'required|email',
-            'pengaturan.email_password' => 'required|string',
-            'pengaturan.email_from_address' => 'required|email',
-            'pengaturan.email_from_name' => 'required|string',
+            'pengaturan.durasi_peminjaman_hari'   => 'required|integer|min:1|max:90',
+            'pengaturan.denda_per_hari'           => 'required|integer|min:0',
+            'pengaturan.denda_rusak'              => 'required|integer|min:0',
+            'pengaturan.denda_hilang'             => 'required|integer|min:0',
+            'pengaturan.max_buku_per_peminjaman'  => 'required|integer|min:1|max:10',
+            'pengaturan.fonnte_token'             => 'nullable|string',
+            'pengaturan.nama_sekolah'             => 'nullable|string|max:255',
+            'pengaturan.alamat_sekolah'           => 'nullable|string|max:255',
+            'pengaturan.telp_sekolah'             => 'nullable|string|max:50',
+            'pengaturan.kota_sekolah'             => 'nullable|string|max:100',
+            'pengaturan.nama_kepala_sekolah'      => 'nullable|string|max:255',
+            'pengaturan.nip_kepala_sekolah'       => 'nullable|string|max:50',
         ], [
             'pengaturan.durasi_peminjaman_hari.required' => 'Durasi peminjaman harus diisi!',
-            'pengaturan.durasi_peminjaman_hari.min' => 'Durasi minimal 1 hari!',
-            'pengaturan.durasi_peminjaman_hari.max' => 'Durasi maksimal 90 hari!',
-            'pengaturan.denda_per_hari.required' => 'Denda per hari harus diisi!',
-            'pengaturan.denda_rusak.required' => 'Denda rusak harus diisi!',
-            'pengaturan.denda_hilang.required' => 'Denda hilang harus diisi!',
-            'pengaturan.max_buku_per_peminjaman.required' => 'Maksimal buku harus diisi!',
-            'pengaturan.max_buku_per_peminjaman.min' => 'Minimal 1 buku!',
-            'pengaturan.max_buku_per_peminjaman.max' => 'Maksimal 10 buku!',
-            'pengaturan.email_host.required' => 'Email host harus diisi!',
-            'pengaturan.email_port.required' => 'Email port harus diisi!',
-            'pengaturan.email_encryption.required' => 'Enkripsi email harus dipilih!',
-            'pengaturan.email_username.required' => 'Email username harus diisi!',
-            'pengaturan.email_username.email' => 'Format email tidak valid!',
-            'pengaturan.email_password.required' => 'Email password harus diisi!',
-            'pengaturan.email_from_address.required' => 'Email pengirim harus diisi!',
-            'pengaturan.email_from_address.email' => 'Format email pengirim tidak valid!',
-            'pengaturan.email_from_name.required' => 'Nama pengirim harus diisi!',
+            'pengaturan.durasi_peminjaman_hari.min'      => 'Durasi minimal 1 hari!',
+            'pengaturan.durasi_peminjaman_hari.max'      => 'Durasi maksimal 90 hari!',
+            'pengaturan.denda_per_hari.required'         => 'Denda per hari harus diisi!',
+            'pengaturan.denda_rusak.required'            => 'Denda rusak harus diisi!',
+            'pengaturan.denda_hilang.required'           => 'Denda hilang harus diisi!',
+            'pengaturan.max_buku_per_peminjaman.required'=> 'Maksimal buku harus diisi!',
+            'pengaturan.max_buku_per_peminjaman.min'     => 'Minimal 1 buku!',
+            'pengaturan.max_buku_per_peminjaman.max'     => 'Maksimal 10 buku!',
         ]);
 
         try {
@@ -67,11 +58,8 @@ class PengaturanComponent extends Component
                 Pengaturan::set($key, $value);
             }
 
-            // Update .env file dengan konfigurasi email baru
-            $this->updateEnvFile();
-
-            Log::info('Pengaturan diubah', ['user' => Auth::user()->nama_user, 'data' => $this->pengaturan]);
-            session()->flash('success', 'Pengaturan berhasil disimpan! Email sudah dikonfigurasi ulang.');
+            Log::info('Pengaturan diubah', ['user' => Auth::user()->nama_user, 'data' => array_keys($this->pengaturan)]);
+            session()->flash('success', 'Pengaturan berhasil disimpan!');
         } catch (\Exception $e) {
             Log::error('Gagal menyimpan pengaturan', ['error' => $e->getMessage()]);
             session()->flash('error', 'Gagal menyimpan pengaturan: ' . $e->getMessage());

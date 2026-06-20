@@ -34,9 +34,26 @@
                     <span>Kelola User</span>
                 </a>
             </li>
-        @else
+        @elseif(Auth::user()->role === 'pustakawan')
             {{-- Menu Pustakawan --}}
-            
+
+            {{-- Verifikasi Pengajuan (dengan badge) --}}
+            <li class="nav-item mb-2">
+                @php $jumlahMenunggu = \App\Models\Peminjaman::where('status_buku','menunggu')->count(); @endphp
+                <a class="nav-link text-white d-flex align-items-center justify-content-between {{ request()->is('verifikasi-pengajuan') ? 'menu-active' : '' }}"
+                   href="{{ route('verifikasi-pengajuan') }}">
+                    <span class="d-flex align-items-center">
+                        <i data-feather="clipboard" class="me-2"></i>
+                        <span>Verifikasi Pengajuan</span>
+                    </span>
+                    @if($jumlahMenunggu > 0)
+                    <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;
+                                 padding:2px 7px;border-radius:20px;line-height:1.6;">
+                        {{ $jumlahMenunggu }}
+                    </span>
+                    @endif
+                </a>
+            </li>
             {{-- Master Data Accordion --}}
             <li class="nav-item mb-2">
                 <a class="nav-link text-white d-flex justify-content-between align-items-center menu-parent {{ request()->is('anggota', 'buku', 'kategori', 'history-peminjaman', 'history-pengembalian') ? 'menu-parent-active' : '' }}" 

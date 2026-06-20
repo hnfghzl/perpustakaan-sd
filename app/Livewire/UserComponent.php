@@ -46,13 +46,18 @@ class UserComponent extends Component
     {
         $this->showForm = !$this->showForm;
         
-        // Reset form saat buka
-        if ($this->showForm) {
-            $this->resetInput();
+        // Clear fields saat buka untuk tambah baru (bukan edit)
+        if ($this->showForm && empty($this->id_user)) {
+            $this->clearFields();
         }
     }
-
-    public function resetInput()
+    
+    public function closeForm()
+    {
+        $this->resetInput();
+    }
+    
+    public function clearFields()
     {
         $this->nama_user = '';
         $this->email = '';
@@ -61,8 +66,13 @@ class UserComponent extends Component
         $this->old_password = '';
         $this->id_user = '';
         $this->showPassword = false;
-        $this->showForm = false;
         $this->showOldPassword = false;
+    }
+
+    public function resetInput()
+    {
+        $this->clearFields();
+        $this->showForm = false;
     }
 
     public function store()
@@ -193,12 +203,8 @@ class UserComponent extends Component
     //---------------------------------------------
     //  KONFIRMASI HAPUS - LIVEWIRE V3
     //---------------------------------------------
-    public function confirmDelete($id)
-    {
-        $this->dispatch('confirm-delete', ['id' => $id]);
-    }
-
-    #[On('deleteUser')]
+    //  DELETE USER - Dipanggil langsung dengan wire:confirm
+    //---------------------------------------------
     public function deleteNow($id)
     {
         // Hanya kepala yang bisa hapus user

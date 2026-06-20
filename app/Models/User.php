@@ -15,6 +15,14 @@ class User extends Authenticatable
         'berlaku_hingga', 'role', 'email', 'password', 'foto_profil'
     ];
 
+    /**
+     * Accessor agar auth()->user()->name bekerja (kompatibel dengan Laravel Auth)
+     */
+    public function getNameAttribute(): string
+    {
+        return $this->nama_user ?? '';
+    }
+
     public function logAktivitas() {
         return $this->hasMany(LogAktivitas::class, 'id_user');
     }

@@ -17,7 +17,7 @@ class BukuComponent extends Component
     protected $paginationTheme = 'bootstrap';
 
     // Properties untuk Buku
-    public $judul, $no_panggil, $kategori_id, $id_buku;
+    public $judul, $pengarang, $penerbit, $tahun_terbit, $no_panggil, $kategori_id, $id_buku;
     public $search = '';
     
     // Properties untuk Eksemplar (saat tambah buku baru)
@@ -82,10 +82,16 @@ class BukuComponent extends Component
         } else {
             // Tampilkan list buku
             $buku = Buku::with(['kategori', 'eksemplar'])
-                ->where('judul', 'like', '%' . $this->search . '%')
-                ->orWhere('no_panggil', 'like', '%' . $this->search . '%')
-                ->orWhereHas('kategori', function ($query) {
-                    $query->where('nama', 'like', '%' . $this->search . '%');
+                ->withCount('eksemplar')
+                ->where(function($q) {
+                    $q->where('judul', 'like', '%' . $this->search . '%')
+                        ->orWhere('pengarang', 'like', '%' . $this->search . '%')
+                        ->orWhere('penerbit', 'like', '%' . $this->search . '%')
+                        ->orWhere('tahun_terbit', 'like', '%' . $this->search . '%')
+                        ->orWhere('no_panggil', 'like', '%' . $this->search . '%')
+                        ->orWhereHas('kategori', function ($query) {
+                            $query->where('nama', 'like', '%' . $this->search . '%');
+                        });
                 })
                 ->orderBy('created_at', 'desc')
                 ->paginate(10);
@@ -146,16 +152,19 @@ class BukuComponent extends Component
 
     public function resetInput()
     {
-        $this->judul = '';
-        $this->no_panggil = '';
-        $this->kategori_id = '';
-        $this->id_buku = '';
-        $this->jumlah_eksemplar = 1;
-        $this->lokasi_rak = '';
-        $this->harga = '';
-        $this->tgl_diterima = Carbon::now()->format('Y-m-d');
-        $this->sumber_perolehan = '';
-        $this->faktur = '';
+        $this->judul        = '';
+        $this->pengarang    = '';
+        $this->penerbit     = '';
+        $this->tahun_terbit = '';
+        $this->no_panggil   = '';
+        $this->kategori_id  = '';
+        $this->id_buku      = '';
+        $this->jumlah_eksemplar  = 1;
+        $this->lokasi_rak        = '';
+        $this->harga             = '';
+        $this->tgl_diterima      = Carbon::now()->format('Y-m-d');
+        $this->sumber_perolehan  = '';
+        $this->faktur            = '';
     }
     
     public function resetInputEksemplar()
@@ -170,26 +179,35 @@ class BukuComponent extends Component
         $this->sumber_perolehan = '';
         $this->faktur = '';
         $this->showFormEksemplar = false;
+        
+        // Auto-generate kode eksemplar jika form dibuka untuk tambah
+        if ($this->selectedBukuId && !$this->id_eksemplar) {
+            $this->generateKodeEksemplar();
+        }
     }
 
     public function store()
     {
         $this->validate([
-            'judul' => 'required|string|max:255',
-            'kategori_id' => 'required|exists:kategori,id_kategori',
-            'jumlah_eksemplar' => 'required|integer|min:1|max:50',
-            'harga' => 'nullable|numeric|min:0',
-            'tgl_diterima' => 'nullable|date'
+            'judul'           => 'required|string|max:255',
+            'pengarang'       => 'nullable|string|max:255',
+            'penerbit'        => 'nullable|string|max:255',
+            'tahun_terbit'    => 'nullable|integer|min:1900|max:' . date('Y'),
+            'kategori_id'     => 'required|exists:kategori,id_kategori',
+            'jumlah_eksemplar'=> 'required|integer|min:1|max:50',
+            'harga'           => 'nullable|numeric|min:0',
+            'tgl_diterima'    => 'nullable|date'
         ], [
-            'judul.required' => 'Judul buku harus diisi!',
-            'judul.max' => 'Judul buku maksimal 255 karakter!',
-            'kategori_id.required' => 'Kategori harus dipilih!',
-            'kategori_id.exists' => 'Kategori tidak valid!',
-            'jumlah_eksemplar.required' => 'Jumlah eksemplar harus diisi!',
-            'jumlah_eksemplar.min' => 'Minimal 1 eksemplar!',
-            'jumlah_eksemplar.max' => 'Maksimal 50 eksemplar sekaligus!',
-            'harga.numeric' => 'Harga harus berupa angka!',
-            'tgl_diterima.date' => 'Format tanggal tidak valid!'
+            'judul.required'          => 'Judul buku harus diisi!',
+            'judul.max'               => 'Judul buku maksimal 255 karakter!',
+            'kategori_id.required'    => 'Kategori harus dipilih!',
+            'kategori_id.exists'      => 'Kategori tidak valid!',
+            'jumlah_eksemplar.required'=> 'Jumlah eksemplar harus diisi!',
+            'jumlah_eksemplar.min'    => 'Minimal 1 eksemplar!',
+            'jumlah_eksemplar.max'    => 'Maksimal 50 eksemplar sekaligus!',
+            'harga.numeric'           => 'Harga harus berupa angka!',
+            'tgl_diterima.date'       => 'Format tanggal tidak valid!',
+            'tahun_terbit.integer'    => 'Tahun terbit harus berupa angka!',
         ]);
 
         // 1. Auto-generate No Panggil
@@ -197,9 +215,12 @@ class BukuComponent extends Component
 
         // 2. Simpan Buku
         $buku = Buku::create([
-            'judul' => $this->judul,
-            'no_panggil' => $no_panggil,
-            'kategori_id' => $this->kategori_id
+            'judul'        => $this->judul,
+            'pengarang'    => $this->pengarang ?: null,
+            'penerbit'     => $this->penerbit ?: null,
+            'tahun_terbit' => $this->tahun_terbit ?: null,
+            'no_panggil'   => $no_panggil,
+            'kategori_id'  => $this->kategori_id
         ]);
 
         // 2. Auto-generate Eksemplar sejumlah yang diminta
@@ -210,10 +231,10 @@ class BukuComponent extends Component
                 'lokasi_rak' => $this->lokasi_rak,
                 'tipe_lokasi' => 'perpustakaan',
                 'status_eksemplar' => 'tersedia',
-                'harga' => $this->harga,
+                'harga' => $this->harga ?: null,
                 'tgl_diterima' => $this->tgl_diterima ?: Carbon::now()->format('Y-m-d'),
-                'sumber_perolehan' => $this->sumber_perolehan,
-                'faktur' => $this->faktur
+                'sumber_perolehan' => $this->sumber_perolehan ?: null,
+                'faktur' => $this->faktur ?: null
             ]);
         }
 
@@ -226,21 +247,27 @@ class BukuComponent extends Component
         $buku = Buku::find($id);
 
         if ($buku) {
-            $this->id_buku = $buku->id_buku;
-            $this->judul = $buku->judul;
-            $this->no_panggil = $buku->no_panggil;
-            $this->kategori_id = $buku->kategori_id;
+            $this->id_buku      = $buku->id_buku;
+            $this->judul        = $buku->judul;
+            $this->pengarang    = $buku->pengarang;
+            $this->penerbit     = $buku->penerbit;
+            $this->tahun_terbit = $buku->tahun_terbit;
+            $this->no_panggil   = $buku->no_panggil;
+            $this->kategori_id  = $buku->kategori_id;
         }
     }
 
     public function update()
     {
         $this->validate([
-            'judul' => 'required|string|max:255',
-            'no_panggil' => 'nullable|string|max:100',
-            'kategori_id' => 'required|exists:kategori,id_kategori'
+            'judul'        => 'required|string|max:255',
+            'pengarang'    => 'nullable|string|max:255',
+            'penerbit'     => 'nullable|string|max:255',
+            'tahun_terbit' => 'nullable|integer|min:1900|max:' . date('Y'),
+            'no_panggil'   => 'nullable|string|max:100',
+            'kategori_id'  => 'required|exists:kategori,id_kategori'
         ], [
-            'judul.required' => 'Judul buku harus diisi!',
+            'judul.required'       => 'Judul buku harus diisi!',
             'kategori_id.required' => 'Kategori harus dipilih!'
         ]);
 
@@ -248,9 +275,12 @@ class BukuComponent extends Component
 
         if ($buku) {
             $buku->update([
-                'judul' => $this->judul,
-                'no_panggil' => $this->no_panggil,
-                'kategori_id' => $this->kategori_id
+                'judul'        => $this->judul,
+                'pengarang'    => $this->pengarang ?: null,
+                'penerbit'     => $this->penerbit ?: null,
+                'tahun_terbit' => $this->tahun_terbit ?: null,
+                'no_panggil'   => $this->no_panggil,
+                'kategori_id'  => $this->kategori_id
             ]);
 
             session()->flash('success', 'Buku berhasil diupdate!');
@@ -273,6 +303,13 @@ class BukuComponent extends Component
     public function updatingSearch()
     {
         $this->resetPage();
+    }
+    
+    public function openFormEksemplar()
+    {
+        $this->resetInputEksemplar();
+        $this->showFormEksemplar = true;
+        $this->generateKodeEksemplar();
     }
     
     // ========== EKSEMPLAR METHODS ==========
@@ -317,15 +354,14 @@ class BukuComponent extends Component
             'lokasi_rak' => $this->lokasi_rak,
             'tipe_lokasi' => $this->tipe_lokasi,
             'status_eksemplar' => $this->status_eksemplar,
-            'harga' => $this->harga,
+            'harga' => $this->harga ?: null,
             'tgl_diterima' => $this->tgl_diterima,
-            'sumber_perolehan' => $this->sumber_perolehan,
-            'faktur' => $this->faktur
+            'sumber_perolehan' => $this->sumber_perolehan ?: null,
+            'faktur' => $this->faktur ?: null
         ]);
 
         session()->flash('success', 'Eksemplar berhasil ditambahkan!');
         $this->resetInputEksemplar();
-        $this->generateKodeEksemplar();
     }
     
     public function editEksemplar($id)
@@ -370,10 +406,10 @@ class BukuComponent extends Component
                 'lokasi_rak' => $this->lokasi_rak,
                 'tipe_lokasi' => $this->tipe_lokasi,
                 'status_eksemplar' => $this->status_eksemplar,
-                'harga' => $this->harga,
+                'harga' => $this->harga ?: null,
                 'tgl_diterima' => $this->tgl_diterima,
-                'sumber_perolehan' => $this->sumber_perolehan,
-                'faktur' => $this->faktur
+                'sumber_perolehan' => $this->sumber_perolehan ?: null,
+                'faktur' => $this->faktur ?: null
             ]);
 
             session()->flash('success', 'Eksemplar berhasil diupdate!');

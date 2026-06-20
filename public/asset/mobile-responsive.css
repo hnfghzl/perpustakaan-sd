@@ -54,7 +54,7 @@ body {
         border-radius: 8px;
         padding: 1rem;
         background: white;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .table-mobile-cards td {
@@ -223,7 +223,10 @@ body {
     }
 
     /* Hide page numbers, show only prev/next */
-    .pagination .page-item:not(.disabled):not(.active):not(:first-child):not(:last-child) {
+    .pagination
+        .page-item:not(.disabled):not(.active):not(:first-child):not(
+            :last-child
+        ) {
         display: none;
     }
 }

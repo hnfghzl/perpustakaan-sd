@@ -26,8 +26,27 @@ class Peminjaman extends Model
         'tgl_pembayaran',
         'jumlah_peminjaman',
         'status_buku',
-        'kode_transaksi'
+        'kode_transaksi',
+        'alasan_penolakan',
     ];
+
+    /**
+     * Status yang dianggap "aktif" (belum selesai/ditolak)
+     */
+    public function isMenunggu(): bool
+    {
+        return $this->status_buku === 'menunggu';
+    }
+
+    public function isDipinjam(): bool
+    {
+        return $this->status_buku === 'dipinjam';
+    }
+
+    public function isDitolak(): bool
+    {
+        return $this->status_buku === 'ditolak';
+    }
     public $timestamps = true;
 
     public function user()

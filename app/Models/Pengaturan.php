@@ -27,14 +27,13 @@ class Pengaturan extends Model
     }
 
     /**
-     * Set setting value by key
+     * Set setting value by key (upsert – update jika ada, insert jika belum)
      */
     public static function set($key, $value)
     {
-        $setting = self::where('key', $key)->first();
-        if ($setting) {
-            $setting->update(['value' => $value]);
-        }
-        return $setting;
+        return self::updateOrCreate(
+            ['key' => $key],
+            ['value' => $value ?? '']
+        );
     }
 }

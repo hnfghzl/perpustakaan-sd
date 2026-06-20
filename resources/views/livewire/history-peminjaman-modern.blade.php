@@ -1,4 +1,4 @@
-<div x-data="{ showExportModal: false }">
+<div x-data="{ showExportModal: false }" style="overflow: visible !important;">
     <style>
         .history-card-modern {
             background: white;
@@ -91,6 +91,60 @@
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
         }
+
+        /* Ensure dropdowns can overflow containers */
+        .history-card-modern,
+        .history-card-modern > div,
+        .row,
+        .col-md-6 {
+            overflow: visible !important;
+        }
+
+        /* Custom dropdown styling */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute !important;
+            top: 100% !important;
+            left: 0 !important;
+            right: auto !important;
+            transform: translateY(4px) !important;
+            z-index: 9999 !important;
+            margin: 0 !important;
+            overflow: visible !important;
+        }
+
+        .dropdown-menu.show {
+            display: block;
+            animation: slideDown 0.2s ease-out;
+        }
+
+        .dropdown-item {
+            transition: all 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: #f3f4f6 !important;
+            color: #111827 !important;
+        }
+
+        .dropdown-item.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%) !important;
+            color: white !important;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(4px);
+            }
+        }
     </style>
 
     {{-- Alert Messages --}}
@@ -111,7 +165,7 @@
     @endif
 
     {{-- Main Card --}}
-    <div class="history-card-modern">
+    <div class="history-card-modern" style="overflow: visible !important;">
         {{-- Header --}}
         <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 24px 28px; border-radius: 16px 16px 0 0;">
             <div class="d-flex justify-content-between align-items-center">
@@ -137,21 +191,61 @@
             </div>
         </div>
 
-        <div style="padding: 28px;">
+        <div style="padding: 28px; overflow: visible !important;">
             {{-- Filter & Search --}}
-            <div class="row mb-4">
+            <div class="row mb-4" style="overflow: visible !important;">
                 <div class="col-md-6 mb-3 mb-md-0">
                     <div style="position: relative;">
                         <i data-feather="search" style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #6b7280; z-index: 10;"></i>
                         <input type="text" class="form-control" wire:model.live="search" placeholder="Cari kode transaksi atau nama anggota..." style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px 12px 44px; font-size: 14px; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">
                     </div>
                 </div>
-                <div class="col-md-6">
-                    <select class="form-select form-control" wire:model.live="filterStatus" style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #000 !important; background-color: #fff !important; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: pointer;">
-                        <option value="" selected style="color: #000; font-weight: 600;">Semua Status</option>
-                        <option value="dipinjam" style="color: #000;">Masih Dipinjam (Aktif)</option>
-                        <option value="kembali" style="color: #000;">Sudah Dikembalikan</option>
-                    </select>
+                <div class="col-md-6" style="overflow: visible !important;">
+                    <div class="dropdown" style="width: 100%; overflow: visible !important;">
+                        <button class="btn btn-white dropdown-toggle w-100 text-start d-flex justify-content-between align-items-center" 
+                                type="button" 
+                                id="statusFilterDropdown" 
+                                data-toggle="dropdown" 
+                                aria-haspopup="true"
+                                aria-expanded="false"
+                                style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 600; color: #000 !important; background-color: #fff !important; box-shadow: 0 2px 6px rgba(0,0,0,0.05); cursor: pointer;">
+                            <span>
+                                @if($filterStatus === '')
+                                    Semua Status
+                                @elseif($filterStatus === 'dipinjam')
+                                    Masih Dipinjam (Aktif)
+                                @else
+                                    Sudah Dikembalikan
+                                @endif
+                            </span>
+                        </button>
+                        <ul class="dropdown-menu w-100 shadow-sm" aria-labelledby="statusFilterDropdown" style="border: 2px solid #e5e7eb; border-radius: 10px; padding: 8px; margin-top: 4px; z-index: 9999 !important;">
+                            <li>
+                                <a class="dropdown-item {{ $filterStatus === '' ? 'active' : '' }}" 
+                                   href="#" 
+                                   wire:click.prevent="$set('filterStatus', '')"
+                                   style="border-radius: 8px; padding: 10px 14px; font-size: 14px; font-weight: 600; color: #000; margin-bottom: 4px;">
+                                    Semua Status
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ $filterStatus === 'dipinjam' ? 'active' : '' }}" 
+                                   href="#" 
+                                   wire:click.prevent="$set('filterStatus', 'dipinjam')"
+                                   style="border-radius: 8px; padding: 10px 14px; font-size: 14px; color: #000; margin-bottom: 4px;">
+                                    Masih Dipinjam (Aktif)
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item {{ $filterStatus === 'kembali' ? 'active' : '' }}" 
+                                   href="#" 
+                                   wire:click.prevent="$set('filterStatus', 'kembali')"
+                                   style="border-radius: 8px; padding: 10px 14px; font-size: 14px; color: #000;">
+                                    Sudah Dikembalikan
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
                 </div>
             </div>
 
@@ -177,7 +271,7 @@
                                     <div style="font-weight: 700; color: {{ $terlambat ? '#dc2626' : '#111827' }}; font-size: 14px; margin-bottom: 4px;">{{ $data->kode_transaksi }}</div>
                                     <div style="color: #374151; font-size: 14px; font-weight: 600; margin-bottom: 3px;">{{ $data->anggota->nama_anggota }}</div>
                                     <div style="font-size: 12px; color: #6b7280;">
-                                        <i data-feather="user" style="width: 12px; height: 12px;"></i> {{ $data->user->nama_user }}
+                                        <i data-feather="user" style="width: 12px; height: 12px;"></i> {{ optional($data->user)->nama_user ?? '(user dihapus)' }}
                                     </div>
                                 </div>
                             </div>
@@ -229,7 +323,7 @@
                         {{-- Column 4: Actions (12%) --}}
                         <div class="col-md-2 text-right">
                             <div style="display: flex; align-items: center; justify-content: flex-end; gap: 8px;" x-data x-init="$nextTick(() => feather.replace())">
-                                <button wire:click="cetakStruk({{ $data->id_peminjaman }})" class="history-btn-detail" title="Cetak Struk">
+                                <button wire:click="cetakStruk({{ $data->id_peminjaman }})" class="history-btn-detail" title="Cetak Slip Pinjaman">
                                     <i data-feather="printer" style="width: 15px; height: 15px;"></i>
                                 </button>
                                 <button wire:click="viewDetail({{ $data->id_peminjaman }})" class="history-btn-detail" title="Lihat Detail">
@@ -328,7 +422,7 @@
                             </div>
                             <div class="col-md-4 mb-2">
                                 <div style="font-size: 12px; color: #6b7280; margin-bottom: 4px;">Diproses Oleh</div>
-                                <div style="font-weight: 700; color: #111827; font-size: 13px;">{{ $detailPeminjaman->user->nama_user }}</div>
+                                <div style="font-weight: 700; color: #111827; font-size: 13px;">{{ optional($detailPeminjaman->user)->nama_user ?? '(user dihapus)' }}</div>
                             </div>
                         </div>
                         <div style="margin-top: 14px;">
@@ -405,86 +499,66 @@
     </script>
     @endassets
 
-    <script data-navigate-once>document.addEventListener('livewire:initialized', () => {
-        refreshFeatherIcons();
+    @script
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            refreshFeatherIcons();
 
-        // Livewire lifecycle hooks
-        Livewire.hook('element.init', () => refreshFeatherIcons());
-        Livewire.hook('element.updated', () => refreshFeatherIcons());
-        Livewire.hook('morph.updated', () => refreshFeatherIcons());
-        Livewire.hook('commit', () => refreshFeatherIcons());
+            // Livewire lifecycle hooks
+            Livewire.hook('element.init', () => refreshFeatherIcons());
+            Livewire.hook('element.updated', () => refreshFeatherIcons());
+            Livewire.hook('morph.updated', () => refreshFeatherIcons());
+            Livewire.hook('commit', () => refreshFeatherIcons());
 
-        // MutationObserver sebagai final backup
-        const observer = new MutationObserver(() => refreshFeatherIcons());
-        observer.observe(document.body, { childList: true, subtree: true });
+            // MutationObserver sebagai final backup
+            const observer = new MutationObserver(() => refreshFeatherIcons());
+            observer.observe(document.body, { childList: true, subtree: true });
 
-        // Auto-hide alerts after 5 seconds
-        setTimeout(() => {
-            const alerts = document.querySelectorAll('.alert');
-            alerts.forEach(alert => {
-                if (alert.classList.contains('show')) {
-                    alert.classList.remove('show');
-                    setTimeout(() => alert.remove(), 300);
-                }
-            });
-        }, 5000);
-        
-        // Function untuk print struk dari history
-        window.printStrukHistory = function() {
-            const strukContent = document.getElementById('strukContentHistory').innerHTML;
-            const printWindow = window.open('', '_blank', 'width=800,height=600');
+            // Auto-hide alerts after 5 seconds
+            setTimeout(() => {
+                const alerts = document.querySelectorAll('.alert');
+                alerts.forEach(alert => {
+                    if (alert.classList.contains('show')) {
+                        alert.classList.remove('show');
+                        setTimeout(() => alert.remove(), 300);
+                    }
+                });
+            }, 5000);
             
-            printWindow.document.write(`
-                <!DOCTYPE html>
-                <html>
-                <head>
-                    <title>Struk Peminjaman</title>
-                    <style>
-                        @media print {
-                            @page { margin: 15mm; }
-                            body { margin: 0; }
-                        }
-                        body {
-                            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                            padding: 20px;
-                            max-width: 600px;
-                            margin: 0 auto;
-                        }
-                        * {
-                            box-sizing: border-box;
-                        }
-                    </style>
-                </head>
-                <body>
-                    ${strukContent}
-                    <script>
-                        setTimeout(function() {
-                            window.print();
-                            window.onafterprint = function() {
-                                window.close();
-                            };
-                        }, 500);
-                    <\/script>
-                </body>
-                </html>
-            `);
-            
-            printWindow.document.close();
-        }
-    });</script>
+            // Function untuk print struk dari history
+            window.printStrukHistory = function() {
+                const strukContent = document.getElementById('strukContentHistory').innerHTML;
+                const printWindow = window.open('', '_blank', 'width=800,height=600');
+                
+                printWindow.document.write('<!DOCTYPE html>');
+                printWindow.document.write('<html><head><title>Slip Pinjaman Perpustakaan</title>');
+                printWindow.document.write('<style>');
+                printWindow.document.write('@media print { @page { margin: 15mm; } body { margin: 0; } }');
+                printWindow.document.write('body { font-family: \'Segoe UI\', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; max-width: 600px; margin: 0 auto; }');
+                printWindow.document.write('* { box-sizing: border-box; }');
+                printWindow.document.write('img { max-width: 100%; }');
+                printWindow.document.write('</style></head><body>');
+                printWindow.document.write(strukContent);
+                printWindow.document.write('<scr'+'ipt>setTimeout(function() { window.print(); window.onafterprint = function() { window.close(); }; }, 800);</scr'+'ipt>');
+                printWindow.document.write('</body></html>');
+                printWindow.document.close();
+            };
+        });
+    </script>
+    @endscript
 
-    {{-- Modal Struk Peminjaman --}}
+    {{-- Modal Slip Pinjaman Perpustakaan --}}
     @if($showStruk && $lastPeminjaman)
     <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 9999;" wire:click="closeStruk">
         <div style="background: white; border-radius: 16px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);" wire:click.stop>
             {{-- Header Modal --}}
             <div style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); padding: 24px; border-radius: 16px 16px 0 0; position: relative;">
-                <button wire:click="closeStruk" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s;">
-                    <i data-feather="x" style="width: 20px; height: 20px;"></i>
+                <button wire:click="closeStruk" style="position: absolute; top: 16px; right: 16px; background: rgba(255, 255, 255, 0.2); border: none; color: white; width: 36px; height: 36px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 22px; line-height: 1; transition: all 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.35)'" onmouseout="this.style.background='rgba(255,255,255,0.2)'">
+                    &times;
                 </button>
                 <h5 style="color: white; margin: 0 0 8px 0; font-weight: 700; font-size: 20px; display: flex; align-items: center;">
                     <i data-feather="file-text" style="width: 24px; height: 24px; margin-right: 10px;"></i>
-                    Struk Peminjaman
+                    Slip Pinjaman Perpustakaan
                 </h5>
                 <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 13px;">
                     Kode: <strong>{{ $lastPeminjaman->kode_transaksi }}</strong>
@@ -495,6 +569,7 @@
             <div id="strukContentHistory" style="padding: 28px;">
                 {{-- Header Perpustakaan --}}
                 <div style="text-align: center; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 2px dashed #e5e7eb;">
+                    <img src="{{ asset('asset/Logo.png') }}" alt="Logo SD Muhammadiyah Karangwaru" style="width: 80px; height: 80px; object-fit: contain; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto;">
                     <h4 style="margin: 0 0 4px 0; font-weight: 700; color: #1f2937; font-size: 18px;">
                         SD Muhammadiyah Karangwaru
                     </h4>
@@ -502,7 +577,7 @@
                         Perpustakaan Sekolah
                     </p>
                     <p style="margin: 4px 0 0 0; color: #6b7280; font-size: 12px;">
-                        Struk Peminjaman Buku
+                        Slip Pinjaman Perpustakaan Buku
                     </p>
                 </div>
 
@@ -533,7 +608,7 @@
                         </tr>
                         <tr>
                             <td style="padding: 6px 0; color: #6b7280;">Petugas</td>
-                            <td style="padding: 6px 0; font-weight: 600; color: #1f2937;">: {{ $lastPeminjaman->user->nama_user }}</td>
+                            <td style="padding: 6px 0; font-weight: 600; color: #1f2937;">: {{ optional($lastPeminjaman->user)->nama_user ?? '(user dihapus)' }}</td>
                         </tr>
                     </table>
                 </div>
@@ -611,10 +686,13 @@
 
             {{-- Action Buttons --}}
             <div style="padding: 0 28px 28px 28px; display: flex; gap: 12px;">
-                <button onclick="printStrukHistory()" style="flex: 1; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                    <i data-feather="printer" style="width: 18px; height: 18px;"></i>
-                    Cetak Struk
-                </button>
+                {{-- Cetak Kartu Anggota (buka tab baru ke halaman kartu) --}}
+                <a href="{{ $lastPeminjaman ? route('cetakKartuAnggota', $lastPeminjaman->id_anggota) : '#' }}"
+                   target="_blank"
+                   style="flex: 1; background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; border: none; padding: 14px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; text-decoration: none; box-shadow: 0 4px 12px rgba(16,185,129,.3);">
+                    <i data-feather="credit-card" style="width: 18px; height: 18px;"></i>
+                    Cetak Kartu Anggota
+                </a>
                 <button wire:click="closeStruk" style="background: #f3f4f6; color: #6b7280; border: none; padding: 14px 20px; border-radius: 10px; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s;">
                     Tutup
                 </button>
